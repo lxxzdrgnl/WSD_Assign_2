@@ -5,13 +5,29 @@ from decimal import Decimal
 
 
 class BookCreateRequest(BaseModel):
-    title: str = Field(min_length=1, max_length=255)
-    author: str = Field(min_length=1, max_length=100)
-    publisher: str = Field(min_length=1, max_length=100)
-    summary: Optional[str] = Field(None, max_length=500)
-    isbn: str = Field(min_length=10, max_length=20, pattern=r"^[0-9\-]+$")
-    price: Decimal = Field(gt=0, decimal_places=2)
-    publication_date: date
+    title: str = Field(min_length=1, max_length=255, example="The Great Gatsby")
+    author: str = Field(min_length=1, max_length=100, example="F. Scott Fitzgerald")
+    publisher: str = Field(min_length=1, max_length=100, example="Scribner")
+    summary: Optional[str] = Field(None, max_length=500, example="A classic American novel")
+    isbn: str = Field(min_length=10, max_length=20, pattern=r"^[0-9\-]+$", example="978-0743273565")
+    price: Decimal = Field(gt=0, decimal_places=2, example=15.99)
+    publication_date: date = Field(example="1925-04-10")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "title": "The Great Gatsby",
+                    "author": "F. Scott Fitzgerald",
+                    "publisher": "Scribner",
+                    "summary": "A classic American novel",
+                    "isbn": "978-0743273565",
+                    "price": 15.99,
+                    "publication_date": "1925-04-10"
+                }
+            ]
+        }
+    }
 
     @field_validator("isbn")
     @classmethod
@@ -25,12 +41,23 @@ class BookCreateRequest(BaseModel):
 
 
 class BookUpdateRequest(BaseModel):
-    title: Optional[str] = Field(None, min_length=1, max_length=255)
-    author: Optional[str] = Field(None, min_length=1, max_length=100)
-    publisher: Optional[str] = Field(None, min_length=1, max_length=100)
-    summary: Optional[str] = Field(None, max_length=500)
-    price: Optional[Decimal] = Field(None, gt=0, decimal_places=2)
-    publication_date: Optional[date] = None
+    title: Optional[str] = Field(None, min_length=1, max_length=255, example="Updated Title")
+    author: Optional[str] = Field(None, min_length=1, max_length=100, example="Updated Author")
+    publisher: Optional[str] = Field(None, min_length=1, max_length=100, example="Updated Publisher")
+    summary: Optional[str] = Field(None, max_length=500, example="Updated summary")
+    price: Optional[Decimal] = Field(None, gt=0, decimal_places=2, example=19.99)
+    publication_date: Optional[date] = Field(None, example="2024-01-01")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "title": "Updated Title",
+                    "price": 19.99
+                }
+            ]
+        }
+    }
 
 
 class BookResponse(BaseModel):

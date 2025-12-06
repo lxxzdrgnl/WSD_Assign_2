@@ -8,12 +8,27 @@ import re
 
 
 class SignupRequest(BaseModel):
-    email: EmailStr
-    password: str = Field(min_length=8, max_length=100)
-    name: str = Field(min_length=1, max_length=100)
-    birth_date: date
-    gender: Literal["MALE", "FEMALE"]
-    address: str = Field(None, max_length=255)
+    email: EmailStr = Field(example="user@example.com")
+    password: str = Field(min_length=8, max_length=100, example="Test1234!")
+    name: str = Field(min_length=1, max_length=100, example="John Doe")
+    birth_date: date = Field(example="1990-01-01")
+    gender: Literal["MALE", "FEMALE"] = Field(example="MALE")
+    address: str = Field(None, max_length=255, example="123 Main St, Seoul")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "email": "user@example.com",
+                    "password": "Test1234!",
+                    "name": "John Doe",
+                    "birth_date": "1990-01-01",
+                    "gender": "MALE",
+                    "address": "123 Main St, Seoul"
+                }
+            ]
+        }
+    }
 
     @field_validator("password")
     @classmethod
@@ -35,8 +50,19 @@ class SignupResponse(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
+    email: EmailStr = Field(example="seller@test.com")
+    password: str = Field(example="Test1234!")
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "email": "seller@test.com",
+                    "password": "Test1234!"
+                }
+            ]
+        }
+    }
 
 
 class TokenResponse(BaseModel):

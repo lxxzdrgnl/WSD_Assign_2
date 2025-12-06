@@ -4,7 +4,6 @@ Health Check Router
 """
 from fastapi import APIRouter
 from datetime import datetime
-from app.config import settings
 
 router = APIRouter(tags=["Health"])
 
@@ -19,7 +18,6 @@ def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat() + "Z",
-        "service": settings.APP_NAME,
-        "version": settings.APP_VERSION,
-        "environment": settings.ENVIRONMENT
+        "service": "Bookstore API",
+        "version": "1.0.0"
     }

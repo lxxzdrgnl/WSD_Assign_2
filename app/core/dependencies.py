@@ -6,7 +6,7 @@ from typing import Optional, List
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-from app.database import get_db
+from app.core.database import get_db
 from app.models import User, UserRole
 from app.core.security import decode_token, verify_token_type
 from app.core.exceptions import (
@@ -19,6 +19,7 @@ from app.core.error_codes import ErrorCode
 
 # HTTP Bearer 토큰 스키마
 security = HTTPBearer()
+security_optional = HTTPBearer(auto_error=False)
 
 
 def get_current_user(
@@ -65,7 +66,7 @@ def get_current_user(
 
 
 def get_optional_user(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_optional),
     db: Session = Depends(get_db)
 ) -> Optional[User]:
     """

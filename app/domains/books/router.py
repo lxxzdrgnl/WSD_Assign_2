@@ -4,7 +4,7 @@ from typing import Optional
 from decimal import Decimal
 from datetime import date
 
-from app.database import get_db
+from app.core.database import get_db
 from app.domains.books import schemas, service
 from app.schemas.base import BaseResponse, SuccessResponse
 from app.core.dependencies import require_seller, get_optional_user

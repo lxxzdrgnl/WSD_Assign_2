@@ -5,7 +5,7 @@ Book Models
 from sqlalchemy import Column, BigInteger, Integer, String, Date, DateTime, ForeignKey, DECIMAL, Text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from app.database import Base
+from app.core.database import Base
 
 
 class Book(Base):
