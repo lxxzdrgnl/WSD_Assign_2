@@ -11,6 +11,7 @@ from app.middleware.error_handler import error_handler_middleware, validation_ex
 
 # 라우터 import
 from app.domains.auth.router import router as auth_router
+from app.domains.books.router import router as books_router
 from app.domains.health.router import router as health_router
 
 # FastAPI 앱 생성
@@ -44,6 +45,7 @@ def startup_event():
 # 라우터 등록
 app.include_router(health_router)
 app.include_router(auth_router)
+app.include_router(books_router)
 
 # Root 엔드포인트
 @app.get("/", tags=["Root"])
