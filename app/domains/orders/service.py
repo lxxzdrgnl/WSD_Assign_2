@@ -9,7 +9,7 @@ from app.models.order import Order, OrderItem, OrderStatus
 from app.models.book import Book
 from app.models.coupon import Coupon, UserCoupon
 from app.domains.orders.schemas import OrderCreateRequest
-from app.core.exceptions import NotFoundError, BadRequestError, ForbiddenError
+from app.core.exceptions import NotFoundException, BadRequestException, ForbiddenException
 from datetime import datetime
 from typing import Optional
 
@@ -31,8 +31,8 @@ class OrderService:
             Order: 생성된 주문
 
         Raises:
-            NotFoundError: 도서 또는 쿠폰을 찾을 수 없음
-            BadRequestError: 쿠폰 사용 불가
+            NotFoundException: 도서 또는 쿠폰을 찾을 수 없음
+            BadRequestException: 쿠폰 사용 불가
         """
         # 주문 항목 검증 및 총 금액 계산
         total_price = 0
@@ -41,7 +41,7 @@ class OrderService:
         for item in data.items:
             book = db.query(Book).filter(Book.id == item.book_id).first()
             if not book:
-                raise NotFoundError("BOOK_NOT_FOUND", f"Book with ID {item.book_id} not found")
+                raise NotFoundException("BOOK_NOT_FOUND", f"Book with ID {item.book_id} not found")
 
             subtotal = book.price * item.quantity
             total_price += subtotal
@@ -61,17 +61,17 @@ class OrderService:
         if data.coupon_id:
             coupon = db.query(Coupon).filter(Coupon.id == data.coupon_id).first()
             if not coupon:
-                raise NotFoundError("COUPON_NOT_FOUND", "Coupon not found")
+                raise NotFoundException("COUPON_NOT_FOUND", "Coupon not found")
 
             # 쿠폰 유효성 검증
             if not coupon.is_active:
-                raise BadRequestError("COUPON_INACTIVE", "Coupon is not active")
+                raise BadRequestException("COUPON_INACTIVE", "Coupon is not active")
 
             now = datetime.utcnow()
             if coupon.valid_from and now < coupon.valid_from:
-                raise BadRequestError("COUPON_NOT_YET_VALID", "Coupon is not yet valid")
+                raise BadRequestException("COUPON_NOT_YET_VALID", "Coupon is not yet valid")
             if coupon.valid_until and now > coupon.valid_until:
-                raise BadRequestError("COUPON_EXPIRED", "Coupon has expired")
+                raise BadRequestException("COUPON_EXPIRED", "Coupon has expired")
 
             # 사용자 쿠폰 확인
             user_coupon = db.query(UserCoupon).filter(
@@ -81,7 +81,7 @@ class OrderService:
             ).first()
 
             if not user_coupon:
-                raise BadRequestError("COUPON_NOT_AVAILABLE", "Coupon is not available for this user")
+                raise BadRequestException("COUPON_NOT_AVAILABLE", "Coupon is not available for this user")
 
             # 할인 금액 계산
             if coupon.discount_type == "PERCENTAGE":
@@ -93,7 +93,7 @@ class OrderService:
 
             # 최소 주문 금액 확인
             if coupon.min_order_amount and total_price < coupon.min_order_amount:
-                raise BadRequestError(
+                raise BadRequestException(
                     "MIN_ORDER_AMOUNT_NOT_MET",
                     f"Minimum order amount is {coupon.min_order_amount}"
                 )
@@ -138,7 +138,7 @@ class OrderService:
 
         except IntegrityError as e:
             db.rollback()
-            raise BadRequestError("ORDER_CREATE_FAILED", f"Failed to create order: {str(e)}")
+            raise BadRequestException("ORDER_CREATE_FAILED", f"Failed to create order: {str(e)}")
 
         # 응답용 데이터 추가
         order.coupon_code = coupon_code
@@ -212,16 +212,16 @@ class OrderService:
             Order: 주문 객체
 
         Raises:
-            NotFoundError: 주문을 찾을 수 없음
-            ForbiddenError: 본인의 주문이 아님
+            NotFoundException: 주문을 찾을 수 없음
+            ForbiddenException: 본인의 주문이 아님
         """
         order = db.query(Order).filter(Order.id == order_id).first()
         if not order:
-            raise NotFoundError("ORDER_NOT_FOUND", "Order not found")
+            raise NotFoundException("ORDER_NOT_FOUND", "Order not found")
 
         # 권한 확인
         if order.user_id != user_id:
-            raise ForbiddenError("FORBIDDEN", "You can only view your own orders")
+            raise ForbiddenException("FORBIDDEN", "You can only view your own orders")
 
         # 쿠폰 코드 추가
         user_coupon = db.query(UserCoupon).filter(UserCoupon.order_id == order.id).first()
@@ -258,21 +258,21 @@ class OrderService:
             Order: 취소된 주문
 
         Raises:
-            NotFoundError: 주문을 찾을 수 없음
-            ForbiddenError: 본인의 주문이 아님
-            BadRequestError: 취소할 수 없는 상태
+            NotFoundException: 주문을 찾을 수 없음
+            ForbiddenException: 본인의 주문이 아님
+            BadRequestException: 취소할 수 없는 상태
         """
         order = db.query(Order).filter(Order.id == order_id).first()
         if not order:
-            raise NotFoundError("ORDER_NOT_FOUND", "Order not found")
+            raise NotFoundException("ORDER_NOT_FOUND", "Order not found")
 
         # 권한 확인
         if order.user_id != user_id:
-            raise ForbiddenError("FORBIDDEN", "You can only cancel your own orders")
+            raise ForbiddenException("FORBIDDEN", "You can only cancel your own orders")
 
         # 상태 확인 (PENDING, CONFIRMED만 취소 가능)
         if order.status not in [OrderStatus.PENDING, OrderStatus.CONFIRMED]:
-            raise BadRequestError(
+            raise BadRequestException(
                 "ORDER_NOT_CANCELABLE",
                 f"Cannot cancel order with status {order.status}"
             )
@@ -291,6 +291,6 @@ class OrderService:
             db.refresh(order)
         except IntegrityError as e:
             db.rollback()
-            raise BadRequestError("CANCEL_FAILED", f"Failed to cancel order: {str(e)}")
+            raise BadRequestException("CANCEL_FAILED", f"Failed to cancel order: {str(e)}")
 
         return order

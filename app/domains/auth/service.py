@@ -12,7 +12,10 @@ from app.core.exceptions import (
     EmailAlreadyExistsException, InvalidCredentialsException, UnauthorizedException
 )
 from app.core.error_codes import ErrorCode
-from app.config import settings
+import os
+
+# JWT 설정 (환경 변수 또는 기본값)
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
 
 def signup(db: Session, request: schemas.SignupRequest) -> schemas.SignupResponse:
@@ -47,7 +50,7 @@ def login(db: Session, request: schemas.LoginRequest) -> schemas.TokenResponse:
     
     return schemas.TokenResponse(
         access_token=access_token, refresh_token=refresh_token_str,
-        token_type="Bearer", expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        token_type="Bearer", expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60
     )
 
 
@@ -73,7 +76,7 @@ def refresh_access_token(db: Session, request: schemas.RefreshTokenRequest) -> s
     
     return schemas.TokenResponse(
         access_token=access_token, refresh_token=request.refresh_token,
-        token_type="Bearer", expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        token_type="Bearer", expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60
     )
 
 

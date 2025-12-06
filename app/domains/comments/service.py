@@ -9,7 +9,7 @@ from app.models.comment import Comment, CommentLike
 from app.models.review import Review
 from app.models.user import User
 from app.domains.comments.schemas import CommentCreateRequest, CommentUpdateRequest
-from app.core.exceptions import NotFoundError, BadRequestError, ForbiddenError
+from app.core.exceptions import NotFoundException, BadRequestException, ForbiddenException
 from typing import Optional
 
 
@@ -30,22 +30,22 @@ class CommentService:
             Comment: 생성된 댓글
 
         Raises:
-            NotFoundError: 리뷰 또는 부모 댓글을 찾을 수 없음
+            NotFoundException: 리뷰 또는 부모 댓글을 찾을 수 없음
         """
         # 리뷰 존재 확인
         review = db.query(Review).filter(Review.id == data.review_id).first()
         if not review:
-            raise NotFoundError("REVIEW_NOT_FOUND", "Review not found")
+            raise NotFoundException("REVIEW_NOT_FOUND", "Review not found")
 
         # 부모 댓글 존재 확인 (대댓글인 경우)
         if data.parent_id:
             parent = db.query(Comment).filter(Comment.id == data.parent_id).first()
             if not parent:
-                raise NotFoundError("PARENT_COMMENT_NOT_FOUND", "Parent comment not found")
+                raise NotFoundException("PARENT_COMMENT_NOT_FOUND", "Parent comment not found")
 
             # 부모 댓글이 같은 리뷰의 댓글인지 확인
             if parent.review_id != data.review_id:
-                raise BadRequestError(
+                raise BadRequestException(
                     "INVALID_PARENT_COMMENT",
                     "Parent comment must belong to the same review"
                 )
@@ -64,7 +64,7 @@ class CommentService:
             db.refresh(comment)
         except IntegrityError as e:
             db.rollback()
-            raise BadRequestError("COMMENT_CREATE_FAILED", f"Failed to create comment: {str(e)}")
+            raise BadRequestException("COMMENT_CREATE_FAILED", f"Failed to create comment: {str(e)}")
 
         return comment
 
@@ -147,11 +147,11 @@ class CommentService:
             Comment: 댓글 객체
 
         Raises:
-            NotFoundError: 댓글을 찾을 수 없음
+            NotFoundException: 댓글을 찾을 수 없음
         """
         comment = db.query(Comment).filter(Comment.id == comment_id).first()
         if not comment:
-            raise NotFoundError("COMMENT_NOT_FOUND", "Comment not found")
+            raise NotFoundException("COMMENT_NOT_FOUND", "Comment not found")
 
         # 좋아요 수
         like_count = db.query(func.count(CommentLike.id)).filter(
@@ -190,16 +190,16 @@ class CommentService:
             Comment: 수정된 댓글
 
         Raises:
-            NotFoundError: 댓글을 찾을 수 없음
-            ForbiddenError: 본인의 댓글이 아님
+            NotFoundException: 댓글을 찾을 수 없음
+            ForbiddenException: 본인의 댓글이 아님
         """
         comment = db.query(Comment).filter(Comment.id == comment_id).first()
         if not comment:
-            raise NotFoundError("COMMENT_NOT_FOUND", "Comment not found")
+            raise NotFoundException("COMMENT_NOT_FOUND", "Comment not found")
 
         # 권한 확인
         if comment.user_id != user_id:
-            raise ForbiddenError("FORBIDDEN", "You can only update your own comments")
+            raise ForbiddenException("FORBIDDEN", "You can only update your own comments")
 
         # 내용 업데이트
         comment.content = data.content
@@ -209,7 +209,7 @@ class CommentService:
             db.refresh(comment)
         except IntegrityError as e:
             db.rollback()
-            raise BadRequestError("UPDATE_FAILED", f"Failed to update comment: {str(e)}")
+            raise BadRequestException("UPDATE_FAILED", f"Failed to update comment: {str(e)}")
 
         return comment
 
@@ -224,16 +224,16 @@ class CommentService:
             user_id: 사용자 ID
 
         Raises:
-            NotFoundError: 댓글을 찾을 수 없음
-            ForbiddenError: 본인의 댓글이 아님
+            NotFoundException: 댓글을 찾을 수 없음
+            ForbiddenException: 본인의 댓글이 아님
         """
         comment = db.query(Comment).filter(Comment.id == comment_id).first()
         if not comment:
-            raise NotFoundError("COMMENT_NOT_FOUND", "Comment not found")
+            raise NotFoundException("COMMENT_NOT_FOUND", "Comment not found")
 
         # 권한 확인
         if comment.user_id != user_id:
-            raise ForbiddenError("FORBIDDEN", "You can only delete your own comments")
+            raise ForbiddenException("FORBIDDEN", "You can only delete your own comments")
 
         # CASCADE로 관련 데이터 자동 삭제 (comment_likes, 자식 댓글)
         db.delete(comment)
@@ -253,12 +253,12 @@ class CommentService:
             tuple: (좋아요 상태, 총 좋아요 수)
 
         Raises:
-            NotFoundError: 댓글을 찾을 수 없음
+            NotFoundException: 댓글을 찾을 수 없음
         """
         # 댓글 존재 확인
         comment = db.query(Comment).filter(Comment.id == comment_id).first()
         if not comment:
-            raise NotFoundError("COMMENT_NOT_FOUND", "Comment not found")
+            raise NotFoundException("COMMENT_NOT_FOUND", "Comment not found")
 
         # 기존 좋아요 확인
         existing_like = db.query(CommentLike).filter(

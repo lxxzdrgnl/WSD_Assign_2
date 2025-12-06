@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from app.models.cart import Cart
 from app.models.book import Book
 from app.domains.cart.schemas import CartAddRequest, CartUpdateRequest
-from app.core.exceptions import NotFoundError, BadRequestError, ForbiddenError, ConflictError
+from app.core.exceptions import NotFoundException, BadRequestException, ForbiddenException, ConflictException
 
 
 class CartService:
@@ -28,13 +28,13 @@ class CartService:
             Cart: 생성된 장바구니 항목
 
         Raises:
-            NotFoundError: 도서를 찾을 수 없음
-            ConflictError: 이미 장바구니에 추가됨
+            NotFoundException: 도서를 찾을 수 없음
+            ConflictException: 이미 장바구니에 추가됨
         """
         # 도서 존재 확인
         book = db.query(Book).filter(Book.id == data.book_id).first()
         if not book:
-            raise NotFoundError("BOOK_NOT_FOUND", "Book not found")
+            raise NotFoundException("BOOK_NOT_FOUND", "Book not found")
 
         # 이미 장바구니에 있는지 확인 (삭제되지 않은 항목)
         existing = db.query(Cart).filter(
@@ -63,7 +63,7 @@ class CartService:
             db.refresh(cart_item)
         except IntegrityError as e:
             db.rollback()
-            raise BadRequestError("CART_ADD_FAILED", f"Failed to add to cart: {str(e)}")
+            raise BadRequestException("CART_ADD_FAILED", f"Failed to add to cart: {str(e)}")
 
         return cart_item
 
@@ -119,8 +119,8 @@ class CartService:
             Cart: 수정된 장바구니 항목
 
         Raises:
-            NotFoundError: 장바구니 항목을 찾을 수 없음
-            ForbiddenError: 본인의 장바구니가 아님
+            NotFoundException: 장바구니 항목을 찾을 수 없음
+            ForbiddenException: 본인의 장바구니가 아님
         """
         cart_item = db.query(Cart).filter(
             Cart.id == cart_id,
@@ -128,11 +128,11 @@ class CartService:
         ).first()
 
         if not cart_item:
-            raise NotFoundError("CART_ITEM_NOT_FOUND", "Cart item not found")
+            raise NotFoundException("CART_ITEM_NOT_FOUND", "Cart item not found")
 
         # 권한 확인
         if cart_item.user_id != user_id:
-            raise ForbiddenError("FORBIDDEN", "You can only update your own cart")
+            raise ForbiddenException("FORBIDDEN", "You can only update your own cart")
 
         # 수량 업데이트
         cart_item.quantity = data.quantity
@@ -142,7 +142,7 @@ class CartService:
             db.refresh(cart_item)
         except IntegrityError as e:
             db.rollback()
-            raise BadRequestError("UPDATE_FAILED", f"Failed to update cart: {str(e)}")
+            raise BadRequestException("UPDATE_FAILED", f"Failed to update cart: {str(e)}")
 
         return cart_item
 
@@ -157,8 +157,8 @@ class CartService:
             user_id: 사용자 ID
 
         Raises:
-            NotFoundError: 장바구니 항목을 찾을 수 없음
-            ForbiddenError: 본인의 장바구니가 아님
+            NotFoundException: 장바구니 항목을 찾을 수 없음
+            ForbiddenException: 본인의 장바구니가 아님
         """
         cart_item = db.query(Cart).filter(
             Cart.id == cart_id,
@@ -166,11 +166,11 @@ class CartService:
         ).first()
 
         if not cart_item:
-            raise NotFoundError("CART_ITEM_NOT_FOUND", "Cart item not found")
+            raise NotFoundException("CART_ITEM_NOT_FOUND", "Cart item not found")
 
         # 권한 확인
         if cart_item.user_id != user_id:
-            raise ForbiddenError("FORBIDDEN", "You can only delete your own cart items")
+            raise ForbiddenException("FORBIDDEN", "You can only delete your own cart items")
 
         # 논리 삭제
         from datetime import datetime
@@ -180,4 +180,4 @@ class CartService:
             db.commit()
         except IntegrityError as e:
             db.rollback()
-            raise BadRequestError("DELETE_FAILED", f"Failed to delete cart item: {str(e)}")
+            raise BadRequestException("DELETE_FAILED", f"Failed to delete cart item: {str(e)}")

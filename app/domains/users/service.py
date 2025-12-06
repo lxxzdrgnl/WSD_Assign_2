@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from app.models.user import User
 from app.domains.users.schemas import UserUpdateRequest
 from app.core.security import hash_password
-from app.core.exceptions import NotFoundError, BadRequestError
+from app.core.exceptions import NotFoundException, BadRequestException
 
 
 class UserService:
@@ -26,11 +26,11 @@ class UserService:
             User: 사용자 객체
 
         Raises:
-            NotFoundError: 사용자를 찾을 수 없음
+            NotFoundException: 사용자를 찾을 수 없음
         """
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
-            raise NotFoundError("USER_NOT_FOUND", "User not found")
+            raise NotFoundException("USER_NOT_FOUND", "User not found")
 
         return user
 
@@ -48,18 +48,18 @@ class UserService:
             User: 수정된 사용자 객체
 
         Raises:
-            NotFoundError: 사용자를 찾을 수 없음
-            BadRequestError: 수정할 내용이 없음
+            NotFoundException: 사용자를 찾을 수 없음
+            BadRequestException: 수정할 내용이 없음
         """
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
-            raise NotFoundError("USER_NOT_FOUND", "User not found")
+            raise NotFoundException("USER_NOT_FOUND", "User not found")
 
         # 수정할 필드만 업데이트
         update_data = data.model_dump(exclude_unset=True)
 
         if not update_data:
-            raise BadRequestError("NO_FIELDS_TO_UPDATE", "No fields to update")
+            raise BadRequestException("NO_FIELDS_TO_UPDATE", "No fields to update")
 
         # 비밀번호는 해싱 필요
         if "password" in update_data:
@@ -74,7 +74,7 @@ class UserService:
             db.refresh(user)
         except IntegrityError as e:
             db.rollback()
-            raise BadRequestError("UPDATE_FAILED", f"Failed to update profile: {str(e)}")
+            raise BadRequestException("UPDATE_FAILED", f"Failed to update profile: {str(e)}")
 
         return user
 
@@ -88,11 +88,11 @@ class UserService:
             user_id: 사용자 ID
 
         Raises:
-            NotFoundError: 사용자를 찾을 수 없음
+            NotFoundException: 사용자를 찾을 수 없음
         """
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
-            raise NotFoundError("USER_NOT_FOUND", "User not found")
+            raise NotFoundException("USER_NOT_FOUND", "User not found")
 
         # CASCADE 설정으로 관련 데이터 자동 삭제
         # - refresh_tokens

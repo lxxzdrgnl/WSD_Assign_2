@@ -4,10 +4,9 @@ Admin Schemas
 """
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime, date
-from typing import Optional
+from typing import Optional, Literal
 from app.models.user import UserRole, Gender
 from app.models.order import OrderStatus
-from app.models.coupon import DiscountType
 
 
 class AdminUserResponse(BaseModel):
@@ -109,7 +108,7 @@ class StatsResponse(BaseModel):
 class CouponCreateRequest(BaseModel):
     """쿠폰 생성 요청"""
     code: str = Field(..., min_length=3, max_length=50, description="쿠폰 코드")
-    discount_type: DiscountType = Field(..., description="할인 타입 (PERCENTAGE, FIXED)")
+    discount_type: Literal["PERCENTAGE", "FIXED"] = Field(..., description="할인 타입 (PERCENTAGE, FIXED)")
     discount_value: int = Field(..., gt=0, description="할인 값 (퍼센트 또는 고정 금액)")
     min_order_amount: Optional[int] = Field(None, ge=0, description="최소 주문 금액")
     max_discount_amount: Optional[int] = Field(None, ge=0, description="최대 할인 금액 (PERCENTAGE일 때)")
@@ -122,7 +121,7 @@ class CouponCreateRequest(BaseModel):
     def validate_discount_value(cls, v: int, info) -> int:
         """할인 값 검증"""
         discount_type = info.data.get('discount_type')
-        if discount_type == DiscountType.PERCENTAGE and (v < 1 or v > 100):
+        if discount_type == "PERCENTAGE" and (v < 1 or v > 100):
             raise ValueError('Percentage discount must be between 1 and 100')
         return v
 
@@ -146,7 +145,7 @@ class CouponResponse(BaseModel):
     """쿠폰 응답"""
     id: int = Field(..., description="쿠폰 ID")
     code: str = Field(..., description="쿠폰 코드")
-    discount_type: DiscountType = Field(..., description="할인 타입")
+    discount_type: Literal["PERCENTAGE", "FIXED"] = Field(..., description="할인 타입")
     discount_value: int = Field(..., description="할인 값")
     min_order_amount: Optional[int] = Field(None, description="최소 주문 금액")
     max_discount_amount: Optional[int] = Field(None, description="최대 할인 금액")

@@ -9,7 +9,7 @@ from app.models.user import User
 from app.core.dependencies import get_current_user
 from app.domains.users.schemas import UserResponse, UserUpdateRequest
 from app.domains.users.service import UserService
-from app.domains.auth.schemas import BaseResponse
+from app.schemas.base import BaseResponse
 
 
 router = APIRouter(prefix="/users", tags=["Users"])

@@ -10,7 +10,7 @@ from app.models.book import Book
 from app.models.order import Order, OrderItem, OrderStatus
 from app.models.user import User
 from app.domains.reviews.schemas import ReviewCreateRequest, ReviewUpdateRequest
-from app.core.exceptions import NotFoundError, BadRequestError, ForbiddenError
+from app.core.exceptions import NotFoundException, BadRequestException, ForbiddenException
 from typing import Optional
 
 
@@ -53,17 +53,17 @@ class ReviewService:
             Review: 생성된 리뷰
 
         Raises:
-            NotFoundError: 도서를 찾을 수 없음
-            ForbiddenError: 구매하지 않은 도서
+            NotFoundException: 도서를 찾을 수 없음
+            ForbiddenException: 구매하지 않은 도서
         """
         # 도서 존재 확인
         book = db.query(Book).filter(Book.id == data.book_id).first()
         if not book:
-            raise NotFoundError("BOOK_NOT_FOUND", "Book not found")
+            raise NotFoundException("BOOK_NOT_FOUND", "Book not found")
 
         # 구매 검증
         if not ReviewService.verify_purchase(db, user_id, data.book_id):
-            raise ForbiddenError(
+            raise ForbiddenException(
                 "REVIEW_REQUIRES_PURCHASE",
                 "You can only review books you have purchased and received"
             )
@@ -88,7 +88,7 @@ class ReviewService:
 
         except IntegrityError as e:
             db.rollback()
-            raise BadRequestError("REVIEW_CREATE_FAILED", f"Failed to create review: {str(e)}")
+            raise BadRequestException("REVIEW_CREATE_FAILED", f"Failed to create review: {str(e)}")
 
         return review
 
@@ -188,11 +188,11 @@ class ReviewService:
             Review: 리뷰 객체
 
         Raises:
-            NotFoundError: 리뷰를 찾을 수 없음
+            NotFoundException: 리뷰를 찾을 수 없음
         """
         review = db.query(Review).filter(Review.id == review_id).first()
         if not review:
-            raise NotFoundError("REVIEW_NOT_FOUND", "Review not found")
+            raise NotFoundException("REVIEW_NOT_FOUND", "Review not found")
 
         # 좋아요 수
         like_count_obj = db.query(ReviewLikeCount).filter(
@@ -231,22 +231,22 @@ class ReviewService:
             Review: 수정된 리뷰
 
         Raises:
-            NotFoundError: 리뷰를 찾을 수 없음
-            ForbiddenError: 본인의 리뷰가 아님
-            BadRequestError: 수정할 내용이 없음
+            NotFoundException: 리뷰를 찾을 수 없음
+            ForbiddenException: 본인의 리뷰가 아님
+            BadRequestException: 수정할 내용이 없음
         """
         review = db.query(Review).filter(Review.id == review_id).first()
         if not review:
-            raise NotFoundError("REVIEW_NOT_FOUND", "Review not found")
+            raise NotFoundException("REVIEW_NOT_FOUND", "Review not found")
 
         # 권한 확인
         if review.user_id != user_id:
-            raise ForbiddenError("FORBIDDEN", "You can only update your own reviews")
+            raise ForbiddenException("FORBIDDEN", "You can only update your own reviews")
 
         # 수정할 필드만 업데이트
         update_data = data.model_dump(exclude_unset=True)
         if not update_data:
-            raise BadRequestError("NO_FIELDS_TO_UPDATE", "No fields to update")
+            raise BadRequestException("NO_FIELDS_TO_UPDATE", "No fields to update")
 
         for field, value in update_data.items():
             setattr(review, field, value)
@@ -256,7 +256,7 @@ class ReviewService:
             db.refresh(review)
         except IntegrityError as e:
             db.rollback()
-            raise BadRequestError("UPDATE_FAILED", f"Failed to update review: {str(e)}")
+            raise BadRequestException("UPDATE_FAILED", f"Failed to update review: {str(e)}")
 
         return review
 
@@ -271,16 +271,16 @@ class ReviewService:
             user_id: 사용자 ID
 
         Raises:
-            NotFoundError: 리뷰를 찾을 수 없음
-            ForbiddenError: 본인의 리뷰가 아님
+            NotFoundException: 리뷰를 찾을 수 없음
+            ForbiddenException: 본인의 리뷰가 아님
         """
         review = db.query(Review).filter(Review.id == review_id).first()
         if not review:
-            raise NotFoundError("REVIEW_NOT_FOUND", "Review not found")
+            raise NotFoundException("REVIEW_NOT_FOUND", "Review not found")
 
         # 권한 확인
         if review.user_id != user_id:
-            raise ForbiddenError("FORBIDDEN", "You can only delete your own reviews")
+            raise ForbiddenException("FORBIDDEN", "You can only delete your own reviews")
 
         # CASCADE로 관련 데이터 자동 삭제 (review_likes, review_like_counts, comments)
         db.delete(review)
@@ -300,12 +300,12 @@ class ReviewService:
             tuple: (좋아요 상태, 총 좋아요 수)
 
         Raises:
-            NotFoundError: 리뷰를 찾을 수 없음
+            NotFoundException: 리뷰를 찾을 수 없음
         """
         # 리뷰 존재 확인
         review = db.query(Review).filter(Review.id == review_id).first()
         if not review:
-            raise NotFoundError("REVIEW_NOT_FOUND", "Review not found")
+            raise NotFoundException("REVIEW_NOT_FOUND", "Review not found")
 
         # 기존 좋아요 확인
         existing_like = db.query(ReviewLike).filter(

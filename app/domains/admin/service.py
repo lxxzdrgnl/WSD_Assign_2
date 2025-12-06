@@ -14,7 +14,7 @@ from app.domains.admin.schemas import (
     OrderStatusUpdateRequest,
     CouponCreateRequest
 )
-from app.core.exceptions import NotFoundError, BadRequestError, ConflictError
+from app.core.exceptions import NotFoundException, BadRequestException, ConflictException
 
 
 class AdminService:
@@ -71,11 +71,11 @@ class AdminService:
             User: 수정된 사용자
 
         Raises:
-            NotFoundError: 사용자를 찾을 수 없음
+            NotFoundException: 사용자를 찾을 수 없음
         """
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
-            raise NotFoundError("USER_NOT_FOUND", "User not found")
+            raise NotFoundException("USER_NOT_FOUND", "User not found")
 
         # 역할 변경
         user.role = data.role
@@ -85,7 +85,7 @@ class AdminService:
             db.refresh(user)
         except IntegrityError as e:
             db.rollback()
-            raise BadRequestError("UPDATE_FAILED", f"Failed to update user role: {str(e)}")
+            raise BadRequestException("UPDATE_FAILED", f"Failed to update user role: {str(e)}")
 
         return user
 
@@ -147,11 +147,11 @@ class AdminService:
             Order: 수정된 주문
 
         Raises:
-            NotFoundError: 주문을 찾을 수 없음
+            NotFoundException: 주문을 찾을 수 없음
         """
         order = db.query(Order).filter(Order.id == order_id).first()
         if not order:
-            raise NotFoundError("ORDER_NOT_FOUND", "Order not found")
+            raise NotFoundException("ORDER_NOT_FOUND", "Order not found")
 
         # 주문 상태 변경
         order.status = data.status
@@ -161,7 +161,7 @@ class AdminService:
             db.refresh(order)
         except IntegrityError as e:
             db.rollback()
-            raise BadRequestError("UPDATE_FAILED", f"Failed to update order status: {str(e)}")
+            raise BadRequestException("UPDATE_FAILED", f"Failed to update order status: {str(e)}")
 
         return order
 
@@ -178,12 +178,12 @@ class AdminService:
             Coupon: 생성된 쿠폰
 
         Raises:
-            ConflictError: 쿠폰 코드 중복
+            ConflictException: 쿠폰 코드 중복
         """
         # 쿠폰 코드 중복 확인
         existing = db.query(Coupon).filter(Coupon.code == data.code).first()
         if existing:
-            raise ConflictError("COUPON_CODE_ALREADY_EXISTS", "Coupon code already exists")
+            raise ConflictException("COUPON_CODE_ALREADY_EXISTS", "Coupon code already exists")
 
         # 쿠폰 생성
         coupon = Coupon(
@@ -203,7 +203,7 @@ class AdminService:
             db.refresh(coupon)
         except IntegrityError as e:
             db.rollback()
-            raise BadRequestError("COUPON_CREATE_FAILED", f"Failed to create coupon: {str(e)}")
+            raise BadRequestException("COUPON_CREATE_FAILED", f"Failed to create coupon: {str(e)}")
 
         return coupon
 
@@ -221,18 +221,18 @@ class AdminService:
             UserCoupon: 발급된 쿠폰
 
         Raises:
-            NotFoundError: 쿠폰 또는 사용자를 찾을 수 없음
-            ConflictError: 이미 발급됨
+            NotFoundException: 쿠폰 또는 사용자를 찾을 수 없음
+            ConflictException: 이미 발급됨
         """
         # 쿠폰 존재 확인
         coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
         if not coupon:
-            raise NotFoundError("COUPON_NOT_FOUND", "Coupon not found")
+            raise NotFoundException("COUPON_NOT_FOUND", "Coupon not found")
 
         # 사용자 존재 확인
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
-            raise NotFoundError("USER_NOT_FOUND", "User not found")
+            raise NotFoundException("USER_NOT_FOUND", "User not found")
 
         # 이미 발급되었는지 확인
         existing = db.query(UserCoupon).filter(
@@ -240,7 +240,7 @@ class AdminService:
             UserCoupon.coupon_id == coupon_id
         ).first()
         if existing:
-            raise ConflictError("COUPON_ALREADY_ISSUED", "Coupon already issued to this user")
+            raise ConflictException("COUPON_ALREADY_ISSUED", "Coupon already issued to this user")
 
         # 쿠폰 발급
         user_coupon = UserCoupon(
@@ -254,6 +254,6 @@ class AdminService:
             db.refresh(user_coupon)
         except IntegrityError as e:
             db.rollback()
-            raise BadRequestError("COUPON_ISSUE_FAILED", f"Failed to issue coupon: {str(e)}")
+            raise BadRequestException("COUPON_ISSUE_FAILED", f"Failed to issue coupon: {str(e)}")
 
         return user_coupon

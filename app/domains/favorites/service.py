@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from app.models.favorite import Favorite
 from app.models.book import Book
 from app.domains.favorites.schemas import FavoriteAddRequest
-from app.core.exceptions import NotFoundError, BadRequestError, ConflictError
+from app.core.exceptions import NotFoundException, BadRequestException, ConflictException
 
 
 class FavoriteService:
@@ -28,13 +28,13 @@ class FavoriteService:
             Favorite: 생성된 위시리스트
 
         Raises:
-            NotFoundError: 도서를 찾을 수 없음
-            ConflictError: 이미 위시리스트에 추가됨
+            NotFoundException: 도서를 찾을 수 없음
+            ConflictException: 이미 위시리스트에 추가됨
         """
         # 도서 존재 확인
         book = db.query(Book).filter(Book.id == data.book_id).first()
         if not book:
-            raise NotFoundError("BOOK_NOT_FOUND", "Book not found")
+            raise NotFoundException("BOOK_NOT_FOUND", "Book not found")
 
         # 이미 위시리스트에 있는지 확인 (삭제되지 않은 항목)
         existing = db.query(Favorite).filter(
@@ -44,7 +44,7 @@ class FavoriteService:
         ).first()
 
         if existing:
-            raise ConflictError("ALREADY_IN_FAVORITES", "Book is already in your favorites")
+            raise ConflictException("ALREADY_IN_FAVORITES", "Book is already in your favorites")
 
         # 위시리스트 추가
         favorite = Favorite(
@@ -58,7 +58,7 @@ class FavoriteService:
             db.refresh(favorite)
         except IntegrityError as e:
             db.rollback()
-            raise BadRequestError("FAVORITE_ADD_FAILED", f"Failed to add favorite: {str(e)}")
+            raise BadRequestException("FAVORITE_ADD_FAILED", f"Failed to add favorite: {str(e)}")
 
         return favorite
 
@@ -119,10 +119,10 @@ class FavoriteService:
             user_id: 사용자 ID
 
         Raises:
-            NotFoundError: 위시리스트를 찾을 수 없음
-            ForbiddenError: 본인의 위시리스트가 아님
+            NotFoundException: 위시리스트를 찾을 수 없음
+            ForbiddenException: 본인의 위시리스트가 아님
         """
-        from app.core.exceptions import ForbiddenError
+        from app.core.exceptions import ForbiddenException
 
         favorite = db.query(Favorite).filter(
             Favorite.id == favorite_id,
@@ -130,11 +130,11 @@ class FavoriteService:
         ).first()
 
         if not favorite:
-            raise NotFoundError("FAVORITE_NOT_FOUND", "Favorite not found")
+            raise NotFoundException("FAVORITE_NOT_FOUND", "Favorite not found")
 
         # 권한 확인
         if favorite.user_id != user_id:
-            raise ForbiddenError("FORBIDDEN", "You can only delete your own favorites")
+            raise ForbiddenException("FORBIDDEN", "You can only delete your own favorites")
 
         # 논리 삭제
         from datetime import datetime
@@ -144,4 +144,4 @@ class FavoriteService:
             db.commit()
         except IntegrityError as e:
             db.rollback()
-            raise BadRequestError("DELETE_FAILED", f"Failed to delete favorite: {str(e)}")
+            raise BadRequestException("DELETE_FAILED", f"Failed to delete favorite: {str(e)}")
