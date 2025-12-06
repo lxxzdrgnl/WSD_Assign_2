@@ -32,7 +32,7 @@ def get_available_coupons(
     - **인증 불필요**: 누구나 조회 가능
     - **필터링**: 활성화되고 유효기간 내의 쿠폰만 표시
     """
-    sort_field, sort_order = sort_params if sort_params else ("created_at", "DESC")
+    sort_field, sort_order = sort_params if sort_params else ("created_at", "desc")
 
     coupons, total = service.get_available_coupons(
         db=db,
@@ -84,7 +84,7 @@ def get_my_coupons(
     - **권한**: 모든 로그인 사용자
     - **필터링**: is_used 파라미터로 사용/미사용 필터링
     """
-    sort_field, sort_order = sort_params if sort_params else ("assigned_at", "DESC")
+    sort_field, sort_order = sort_params if sort_params else ("assigned_at", "desc")
 
     coupons, total = service.get_my_coupons(
         db=db,

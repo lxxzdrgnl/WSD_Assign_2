@@ -201,12 +201,12 @@ def get_sort_params(allowed_fields: Optional[List[str]] = None):
                 detail="잘못된 정렬 파라미터 형식입니다. 'field,ORDER' 형식이어야 합니다."
             )
         
-        field, order = parts[0].strip(), parts[1].strip().upper()
+        field, order = parts[0].strip(), parts[1].strip().lower()
 
-        if order not in ["ASC", "DESC"]:
+        if order not in ["asc", "desc"]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="정렬 순서는 'ASC' 또는 'DESC'여야 합니다."
+                detail="정렬 순서는 'asc' 또는 'desc'여야 합니다."
             )
         
         if allowed_fields and field not in allowed_fields:

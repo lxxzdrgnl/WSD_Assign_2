@@ -44,7 +44,7 @@ def get_all_users(
     ))
 ):
     """전체 사용자 목록 조회 (ADMIN)"""
-    sort_field, sort_order = sort_params if sort_params else ("created_at", "DESC")
+    sort_field, sort_order = sort_params if sort_params else ("created_at", "desc")
 
     users, total = AdminService.get_all_users(
         db=db,

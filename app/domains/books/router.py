@@ -71,7 +71,7 @@ def list_books(
         allowed_fields=["title", "author", "price", "publication_date", "created_at", "view_count"]
     ))
 ):
-    sort_field, sort_order = sort_params if sort_params else ("created_at", "DESC")
+    sort_field, sort_order = sort_params if sort_params else ("created_at", "desc")
 
     params = schemas.BookSearchParams(
         keyword=keyword,

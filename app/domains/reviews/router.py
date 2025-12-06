@@ -72,7 +72,7 @@ def get_reviews(
 ):
     """리뷰 목록 조회"""
     current_user_id = current_user.id if current_user else None
-    sort_field, sort_order = sort_params if sort_params else ("created_at", "DESC")
+    sort_field, sort_order = sort_params if sort_params else ("created_at", "desc")
 
     reviews, total = ReviewService.get_reviews(
         db=db,

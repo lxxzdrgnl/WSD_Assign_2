@@ -69,7 +69,7 @@ def get_favorites(
     ))
 ):
     """위시리스트 조회"""
-    sort_field, sort_order = sort_params if sort_params else ("created_at", "DESC")
+    sort_field, sort_order = sort_params if sort_params else ("created_at", "desc")
 
     favorites, total = FavoriteService.get_favorites(
         db=db,

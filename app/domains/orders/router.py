@@ -65,7 +65,7 @@ def get_orders(
     ))
 ):
     """주문 목록 조회"""
-    sort_field, sort_order = sort_params if sort_params else ("created_at", "DESC")
+    sort_field, sort_order = sort_params if sort_params else ("created_at", "desc")
 
     orders, total = OrderService.get_orders(
         db=db,

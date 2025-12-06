@@ -34,7 +34,7 @@ def get_library(
     ))
 ):
     """구매한 도서 목록 조회"""
-    sort_field, sort_order = sort_params if sort_params else ("order_date", "DESC")
+    sort_field, sort_order = sort_params if sort_params else ("order_date", "desc")
 
     books, total = LibraryService.get_purchased_books(
         db=db,
