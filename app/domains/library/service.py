@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from app.models.order import Order, OrderItem, OrderStatus
 from app.models.book import Book
+from typing import Optional
 
 
 class LibraryService:

@@ -9,6 +9,7 @@ from app.models.favorite import Favorite
 from app.models.book import Book
 from app.domains.favorites.schemas import FavoriteAddRequest
 from app.core.exceptions import NotFoundException, BadRequestException, ConflictException
+from typing import Optional
 
 
 class FavoriteService:

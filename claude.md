@@ -847,3 +847,105 @@ app/
 - 시드 데이터: 477/200 (238%)
 - 자동화 테스트: 0/20 (0%)
 - 배포: 0/1 (0%)
+
+---
+
+## Phase 7: Docker 배포 및 API 표준화 (2025-12-07)
+
+### ✅ Docker 배포 구현 완료
+
+**feat: Docker 배포 구현 및 API 표준화**
+
+#### 1. Docker 기반 배포 환경 구축
+- **Dockerfile 추가**: Multi-stage build로 최적화된 컨테이너 이미지 생성
+- **docker-compose.yml**: 애플리케이션과 MySQL 데이터베이스를 함께 컨테이너화
+- **GitHub Actions 워크플로우**: `deploy-docker.yml`
+  - Docker 이미지 빌드
+  - GitHub Container Registry에 푸시
+  - 서버 접속하여 docker-compose로 서비스 재시작
+
+#### 2. API 표준화 작업
+
+**목록 조회 API 공통 규격 적용**
+- **페이지네이션**: 모든 목록 API에 일관된 페이지네이션 적용
+- **정렬 파라미터 통합**:
+  - 기존: `sort=field&order=asc/desc`
+  - 변경: `sort=field,ORDER` (단일 파라미터)
+- **재사용 가능한 의존성**: `get_sort_params()` 함수로 유효성 검사 중앙화
+- **응답 형식 표준화**:
+  - 필드명 camelCase 통일: `totalElements`, `totalPages`
+  - 정렬 정보 포함: `sort` 필드 추가
+
+**예시 응답**:
+```json
+{
+  "isSuccess": true,
+  "message": "목록 조회 성공",
+  "payload": {
+    "content": [...],
+    "page": 1,
+    "size": 20,
+    "totalElements": 153,
+    "totalPages": 8,
+    "sort": "created_at,desc"
+  }
+}
+```
+
+#### 3. API 안정성 및 기능 개선
+- **레이트 리미팅**: `slowapi` 라이브러리로 API 요청 횟수 제한 추가
+- **설정 관리 개선**: `pydantic-settings`로 환경 변수 중앙 관리
+- **테스트 코드 수정**: API v1 접두사 제거 후 하드코딩된 URL 수정
+
+#### 4. 버그 수정 및 코드 정리
+- **타입 임포트 누락 해결**: 여러 파일에서 `Optional` 임포트 추가로 `NameError` 해결
+- **불필요한 파일 제거**: `systemd` 기반 배포 스크립트 삭제
+
+#### 5. 영향받은 도메인
+- ✅ Books API
+- ✅ Reviews API
+- ✅ Comments API
+- ✅ Orders API
+- ✅ Favorites API
+- ✅ Cart API
+- ✅ Library API
+- ✅ Coupons API
+- ✅ Admin API
+
+### 📦 Docker 환경 구성
+
+**컨테이너 구조**:
+```
+docker-compose.yml
+├── app (FastAPI 애플리케이션)
+│   ├── Port: 8000
+│   ├── Depends on: mysql
+│   └── Environment: .env
+└── mysql (MySQL 8.0)
+    ├── Port: 3306
+    ├── Volume: mysql_data
+    └── Environment: .env
+```
+
+**주요 Docker 명령어**:
+```bash
+# 빌드 및 실행
+docker-compose up --build -d
+
+# 서비스 재시작
+docker-compose restart
+
+# 로그 확인
+docker-compose logs -f app
+
+# 중지 및 제거
+docker-compose down
+```
+
+### 🔧 업데이트된 진행률
+- ✅ Docker 배포 환경 구축
+- ✅ API 표준화 완료
+- ✅ 레이트 리미팅 추가
+- ✅ 설정 관리 개선
+
+**최종 업데이트**: 2025-12-07

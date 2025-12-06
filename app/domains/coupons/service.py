@@ -5,6 +5,7 @@ from app.models.coupon import Coupon, UserCoupon
 from app.domains.coupons import schemas
 from app.core.exceptions import BaseAPIException
 from fastapi import status
+from typing import Optional
 
 
 def get_available_coupons(

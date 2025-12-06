@@ -3,7 +3,7 @@ FastAPI Dependencies
 인증 및 권한 의존성 함수
 """
 from typing import Optional, List
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -175,46 +175,45 @@ def verify_resource_owner(resource_user_id: int, current_user: User) -> None:
         )
 
 
-def get_sort_params(
-    sort: Optional[str] = Query(None, description="정렬 기준 (예: field,ASC 또는 field,DESC)"),
-    allowed_fields: Optional[List[str]] = None
-) -> Optional[tuple[str, str]]:
+def get_sort_params(allowed_fields: Optional[List[str]] = None):
     """
-    정렬 쿼리 파라미터를 파싱하고 유효성을 검사합니다.
+    정렬 파라미터를 파싱하고 유효성을 검사하는 의존성을 생성합니다.
 
     Args:
-        sort: 'field,ORDER' 형식의 정렬 문자열 (예: 'created_at,DESC')
         allowed_fields: 정렬에 허용되는 필드 이름 리스트
 
     Returns:
-        (정렬 필드, 정렬 순서) 튜플 또는 None
-    
-    Raises:
-        HTTPException: 정렬 파라미터 형식이 잘못되었거나 허용되지 않는 필드인 경우
+        의존성 함수
     """
-    if sort is None:
-        return None
+    def _get_sort_params(
+        sort: Optional[str] = Query(None, description="정렬 기준 (예: field,ASC 또는 field,DESC)")
+    ) -> Optional[tuple[str, str]]:
+        """
+        'sort' 쿼리 파라미터를 파싱합니다.
+        """
+        if sort is None:
+            return None
 
-    parts = sort.split(',')
-    if len(parts) != 2:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="잘못된 정렬 파라미터 형식입니다. 'field,ORDER' 형식이어야 합니다."
-        )
-    
-    field, order = parts[0], parts[1].upper()
+        parts = sort.split(',')
+        if len(parts) != 2:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="잘못된 정렬 파라미터 형식입니다. 'field,ORDER' 형식이어야 합니다."
+            )
+        
+        field, order = parts[0].strip(), parts[1].strip().upper()
 
-    if order not in ["ASC", "DESC"]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="정렬 순서는 'ASC' 또는 'DESC'여야 합니다."
-        )
-    
-    if allowed_fields and field not in allowed_fields:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"허용되지 않는 정렬 필드입니다. 허용되는 필드: {', '.join(allowed_fields)}"
-        )
+        if order not in ["ASC", "DESC"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="정렬 순서는 'ASC' 또는 'DESC'여야 합니다."
+            )
+        
+        if allowed_fields and field not in allowed_fields:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"허용되지 않는 정렬 필드입니다. 허용되는 필드: {', '.join(allowed_fields)}"
+            )
 
-    return field, order
-
+        return field, order
+    return _get_sort_params

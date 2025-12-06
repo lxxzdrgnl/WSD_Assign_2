@@ -4,6 +4,7 @@ Library Router
 """
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
+from typing import Optional
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, get_sort_params
 from app.models.user import User
