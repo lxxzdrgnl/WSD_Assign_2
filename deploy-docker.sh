@@ -3,22 +3,29 @@
 # Exit on error
 set -e
 
-# 1. Log in to GitHub Container Registry
-# Note: GH_TOKEN and GH_USER must be set as environment variables on the server
-# or passed in securely. For this script, we assume they are available.
-echo "Logging in to GitHub Container Registry..."
-echo $GH_TOKEN | docker login ghcr.io -u $GH_USER --password-stdin
+echo "Starting deployment..."
 
-# 2. Pull the latest Docker image
-echo "Pulling latest Docker image..."
-docker pull ghcr.io/lxxzdrgnl/wsd_assign_2:latest
+# 1. Pull latest code from GitHub
+echo "Pulling latest code..."
+git pull origin main
 
-# 3. Stop and restart services with Docker Compose
-echo "Restarting services with Docker Compose..."
-docker-compose down
+# 2. Stop existing containers
+echo "Stopping existing containers..."
+docker-compose down || true
+
+# 3. Build and start services with Docker Compose
+echo "Building and starting services..."
 docker-compose up -d --build
 
-# 4. Clean up dangling Docker images
+# 4. Wait for services to be ready
+echo "Waiting for services to start..."
+sleep 10
+
+# 5. Check service status
+echo "Checking service status..."
+docker-compose ps
+
+# 6. Clean up dangling Docker images
 echo "Cleaning up old images..."
 docker image prune -f
 
