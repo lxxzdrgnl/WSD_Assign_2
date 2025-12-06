@@ -14,7 +14,7 @@ class Book(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="도서 고유 ID")
     seller_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -51,14 +51,14 @@ class BookView(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="조회 기록 ID")
     user_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
         comment="조회한 사용자 (비로그인 가능)"
     )
     book_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("books.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

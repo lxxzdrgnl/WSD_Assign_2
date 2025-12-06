@@ -14,14 +14,14 @@ class Cart(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="장바구니 ID")
     user_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
         comment="사용자 ID"
     )
     book_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("books.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

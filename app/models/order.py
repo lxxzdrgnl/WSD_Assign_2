@@ -24,7 +24,7 @@ class Order(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="주문 ID")
     user_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
@@ -59,14 +59,14 @@ class OrderItem(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="주문 상세 ID")
     order_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("orders.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
         comment="주문 ID"
     )
     book_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("books.id", ondelete="SET NULL"),
         nullable=True,
         comment="도서 ID"

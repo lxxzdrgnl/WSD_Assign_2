@@ -17,21 +17,21 @@ class Review(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="리뷰 ID")
     user_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
         comment="작성자 ID"
     )
     book_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("books.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
         comment="리뷰 대상 도서"
     )
     order_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("orders.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
@@ -66,14 +66,14 @@ class ReviewLike(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="리뷰 좋아요 ID")
     review_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("reviews.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
         comment="좋아요 대상 리뷰 ID"
     )
     user_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -91,7 +91,7 @@ class ReviewLikeCount(Base):
     __tablename__ = "review_like_counts"
 
     review_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("reviews.id", ondelete="CASCADE"),
         primary_key=True,
         comment="리뷰 ID"

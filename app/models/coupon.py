@@ -38,14 +38,14 @@ class UserCoupon(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="사용자 쿠폰 ID")
     user_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
         comment="사용자 ID"
     )
     coupon_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("coupons.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

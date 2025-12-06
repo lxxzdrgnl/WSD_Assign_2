@@ -23,7 +23,7 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD} # It's recommended to use a different root password
     ports:
-      - "3306:3306"
+      - "3307:3306"  # Changed to avoid conflict with local MySQL
     volumes:
       - mysql_data:/var/lib/mysql
     networks:

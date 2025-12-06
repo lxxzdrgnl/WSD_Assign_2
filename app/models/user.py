@@ -68,7 +68,7 @@ class RefreshToken(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="Refresh Token 고유 ID")
     user_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

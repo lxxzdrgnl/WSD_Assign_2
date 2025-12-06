@@ -14,14 +14,14 @@ class Favorite(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="즐겨찾기 ID")
     user_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
         comment="사용자 ID"
     )
     book_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("books.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

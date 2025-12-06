@@ -14,21 +14,21 @@ class Comment(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="댓글 ID")
     review_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("reviews.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
         comment="댓글이 달린 리뷰 ID"
     )
     user_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
         comment="작성자 ID"
     )
     parent_comment_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("comments.id", ondelete="CASCADE"),
         nullable=True,
         comment="NULL이면 일반 댓글, 값이 있으면 대댓글"
@@ -61,14 +61,14 @@ class CommentLike(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="댓글 좋아요 ID")
     comment_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("comments.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
         comment="좋아요 대상 댓글 ID"
     )
     user_id = Column(
-        BigInteger,
+        Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
