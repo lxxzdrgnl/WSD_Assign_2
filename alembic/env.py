@@ -13,7 +13,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from app.core.config import settings
-from app.database import Base
+from app.core.database import Base
 
 # 모든 모델 import (Alembic이 테이블을 인식하도록)
 from app.models import (
