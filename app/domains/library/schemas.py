@@ -22,10 +22,10 @@ class LibraryBookResponse(BaseModel):
         "json_schema_extra": {
             "example": {
                 "book_id": 1,
-                "title": "The Great Gatsby",
-                "author": "F. Scott Fitzgerald",
-                "publisher": "Scribner",
-                "thumbnail_url": "https://example.com/thumbnail.jpg",
+                "title": "채식주의자",
+                "author": "한강",
+                "publisher": "창비",
+                "thumbnail_url": None,
                 "purchased_at": "2025-12-01T10:00:00",
                 "order_id": 5
             }
@@ -38,10 +38,12 @@ class LibraryListResponse(BaseModel):
     content: list[LibraryBookResponse] = Field(..., description="구매한 도서 목록")
     page: int = Field(..., description="현재 페이지")
     size: int = Field(..., description="페이지 크기")
-    total_elements: int = Field(..., description="전체 도서 수")
-    total_pages: int = Field(..., description="전체 페이지 수")
+    total_elements: int = Field(..., alias="totalElements", description="전체 도서 수")
+    total_pages: int = Field(..., alias="totalPages", description="전체 페이지 수")
+    sort: str = Field(..., description="정렬 기준")
 
     model_config = {
+        "populate_by_name": True,
         "json_schema_extra": {
             "example": {
                 "content": [],

@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
 from datetime import datetime
+from slowapi.errors import RateLimitExceeded
 from app.core.exceptions import BaseAPIException
 from app.core.error_codes import ErrorCode
 import traceback
@@ -14,6 +15,20 @@ import traceback
 
 def add_error_handlers(app: FastAPI):
     """FastAPI 앱에 에러 핸들러 등록"""
+
+    @app.exception_handler(RateLimitExceeded)
+    async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
+        return JSONResponse(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            content={
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "path": str(request.url.path),
+                "status": 429,
+                "code": "TOO_MANY_REQUESTS",
+                "message": "요청 횟수가 너무 많습니다. 잠시 후 다시 시도해주세요.",
+                "details": {"retry_after": exc.retry_after}
+            }
+        )
 
     @app.exception_handler(BaseAPIException)
     async def custom_exception_handler(request: Request, exc: BaseAPIException):
@@ -38,13 +53,16 @@ def add_error_handlers(app: FastAPI):
                 "path": str(request.url.path),
                 "status": 400,
                 "code": "VALIDATION_FAILED",
-                "message": "Validation failed",
+                "message": "입력값이 올바르지 않습니다.",
                 "details": {"errors": [{"loc": list(e["loc"]), "msg": e["msg"], "type": e["type"]} for e in exc.errors()]}
             }
         )
 
     @app.exception_handler(Exception)
     async def general_exception_handler(request: Request, exc: Exception):
+        # 스택 트레이스 로깅
+        traceback.print_exc()
+
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={
@@ -52,78 +70,8 @@ def add_error_handlers(app: FastAPI):
                 "path": str(request.url.path),
                 "status": 500,
                 "code": "INTERNAL_SERVER_ERROR",
-                "message": "Internal server error",
-                "details": {"error": str(exc)}
-            }
-        )
-
-
-async def error_handler_middleware(request: Request, call_next):
-    """에러 핸들러 미들웨어"""
-    try:
-        response = await call_next(request)
-        return response
-    except BaseAPIException as exc:
-        # 커스텀 예외 처리
-        return JSONResponse(
-            status_code=exc.status_code,
-            content={
-                "timestamp": datetime.utcnow().isoformat() + "Z",
-                "path": str(request.url.path),
-                "status": exc.status_code,
-                "code": exc.error_code,
-                "message": exc.message,
-                "details": exc.details
-            }
-        )
-    except ValidationError as exc:
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            content={
-                "timestamp": datetime.utcnow().isoformat() + "Z",
-                "path": str(request.url.path),
-                "status": 400,
-                "code": ErrorCode.VALIDATION_FAILED,
-                "message": "Validation failed",
-                "details": {"errors": [{"loc": e["loc"], "msg": e["msg"], "type": e["type"]} for e in exc.errors()]}
-            }
-        )
-    except ValueError as exc:
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            content={
-                "timestamp": datetime.utcnow().isoformat() + "Z",
-                "path": str(request.url.path),
-                "status": 400,
-                "code": ErrorCode.VALIDATION_FAILED,
-                "message": str(exc),
+                "message": "서버에 오류가 발생했습니다.",
                 "details": {}
             }
         )
-    except Exception as exc:
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={
-                "timestamp": datetime.utcnow().isoformat() + "Z",
-                "path": str(request.url.path),
-                "status": 500,
-                "code": ErrorCode.INTERNAL_SERVER_ERROR,
-                "message": "Internal server error",
-                "details": {"error": str(exc), "type": type(exc).__name__}
-            }
-        )
 
-
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    """Pydantic 검증 오류 핸들러"""
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content={
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-            "path": str(request.url.path),
-            "status": 400,
-            "code": ErrorCode.VALIDATION_FAILED,
-            "message": "입력값 검증에 실패했습니다.",
-            "details": {"errors": exc.errors()}
-        }
-    )

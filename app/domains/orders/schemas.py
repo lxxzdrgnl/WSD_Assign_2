@@ -50,11 +50,11 @@ class OrderItemResponse(BaseModel):
             "example": {
                 "id": 1,
                 "book_id": 1,
-                "book_title": "The Great Gatsby",
-                "book_author": "F. Scott Fitzgerald",
+                "book_title": "채식주의자",
+                "book_author": "한강",
                 "quantity": 2,
-                "price": 15000,
-                "subtotal": 30000
+                "price": 10800,
+                "subtotal": 21600
             }
         }
     }
@@ -79,13 +79,13 @@ class OrderResponse(BaseModel):
         "json_schema_extra": {
             "example": {
                 "id": 1,
-                "user_id": 1,
+                "user_id": 11,
                 "status": "PENDING",
                 "total_price": 45000,
-                "discount_amount": 5000,
-                "final_price": 40000,
+                "discount_amount": 4500,
+                "final_price": 40500,
                 "shipping_address": "서울시 강남구 테헤란로 123",
-                "coupon_code": "WELCOME10",
+                "coupon_code": "신규회원10",
                 "items": [],
                 "created_at": "2025-12-06T14:00:00",
                 "updated_at": "2025-12-06T14:00:00"
@@ -99,10 +99,12 @@ class OrderListResponse(BaseModel):
     content: list[OrderResponse] = Field(..., description="주문 목록")
     page: int = Field(..., description="현재 페이지")
     size: int = Field(..., description="페이지 크기")
-    total_elements: int = Field(..., description="전체 주문 수")
-    total_pages: int = Field(..., description="전체 페이지 수")
+    total_elements: int = Field(..., alias="totalElements", description="전체 주문 수")
+    total_pages: int = Field(..., alias="totalPages", description="전체 페이지 수")
+    sort: str = Field(..., description="정렬 기준")
 
     model_config = {
+        "populate_by_name": True,
         "json_schema_extra": {
             "example": {
                 "content": [],

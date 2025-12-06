@@ -5,7 +5,7 @@ Orders Router
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user, get_sort_params
 from app.models.user import User
 from app.models.order import OrderStatus
 from app.domains.orders.schemas import (
@@ -20,7 +20,7 @@ from typing import Optional
 import math
 
 
-router = APIRouter(prefix="/api/v1/orders", tags=["Orders"])
+router = APIRouter(prefix="/api/orders", tags=["Orders"])
 
 
 @router.post(
@@ -43,7 +43,7 @@ def create_order(
 
     return BaseResponse(
         is_success=True,
-        message="Order created successfully",
+        message="주문이 성공적으로 생성되었습니다.",
         payload=OrderResponse.model_validate(order)
     )
 
@@ -59,31 +59,41 @@ def get_orders(
     page: int = Query(1, ge=1, description="페이지 번호"),
     size: int = Query(10, ge=1, le=100, description="페이지 크기"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    sort_params: Optional[tuple[str, str]] = Depends(get_sort_params(
+        allowed_fields=["id", "created_at", "status", "total_price"]
+    ))
 ):
     """주문 목록 조회"""
+    sort_field, sort_order = sort_params if sort_params else ("created_at", "DESC")
+
     orders, total = OrderService.get_orders(
         db=db,
         user_id=current_user.id,
         status=status,
         page=page,
-        size=size
+        size=size,
+        sort_field=sort_field,
+        sort_order=sort_order
     )
 
     # 응답 데이터 구성
     order_list = [OrderResponse.model_validate(order) for order in orders]
     total_pages = math.ceil(total / size) if total > 0 else 0
 
+    payload_data = OrderListResponse(
+        content=order_list,
+        page=page,
+        size=size,
+        total_elements=total,
+        total_pages=total_pages,
+        sort=f"{sort_field},{sort_order}"
+    ).model_dump(by_alias=True)
+
     return BaseResponse(
         is_success=True,
-        message="Orders retrieved successfully",
-        payload=OrderListResponse(
-            content=order_list,
-            page=page,
-            size=size,
-            total_elements=total,
-            total_pages=total_pages
-        )
+        message="주문 목록이 성공적으로 조회되었습니다.",
+        payload=OrderListResponse(**payload_data)
     )
 
 
@@ -103,7 +113,7 @@ def get_order(
 
     return BaseResponse(
         is_success=True,
-        message="Order retrieved successfully",
+        message="주문이 성공적으로 조회되었습니다.",
         payload=OrderResponse.model_validate(order)
     )
 
@@ -127,6 +137,6 @@ def cancel_order(
 
     return BaseResponse(
         is_success=True,
-        message="Order cancelled successfully",
+        message="주문이 성공적으로 취소되었습니다.",
         payload=OrderResponse.model_validate(order)
     )

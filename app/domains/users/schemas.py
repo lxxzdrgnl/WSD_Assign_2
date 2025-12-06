@@ -24,13 +24,13 @@ class UserResponse(BaseModel):
         "from_attributes": True,
         "json_schema_extra": {
             "example": {
-                "id": 1,
+                "id": 11,
                 "role": "CUSTOMER",
-                "email": "user@example.com",
-                "name": "홍길동",
-                "birth_date": "1990-01-01",
-                "gender": "MALE",
-                "address": "서울시 강남구 테헤란로 123",
+                "email": "customer1@example.com",
+                "name": "김민준",
+                "birth_date": "1990-02-02",
+                "gender": "FEMALE",
+                "address": "서울특별시 서초구",
                 "created_at": "2025-12-06T10:00:00",
                 "updated_at": "2025-12-06T10:00:00"
             }

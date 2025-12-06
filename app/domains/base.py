@@ -23,3 +23,18 @@ class BaseResponse(BaseModel, Generic[T]):
             }
         }
     }
+
+
+class SuccessResponse(BaseResponse[None]):
+    """성공 응답 스키마 (데이터 없음)"""
+    is_success: bool = Field(True, description="성공 여부")
+    payload: Optional[T] = Field(None, description="응답 데이터", exclude=True)
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "is_success": True,
+                "message": "Operation successful",
+            }
+        }
+    }

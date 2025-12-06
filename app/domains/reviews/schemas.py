@@ -59,7 +59,7 @@ class ReviewResponse(BaseModel):
                 "id": 1,
                 "book_id": 1,
                 "user_id": 2,
-                "user_name": "홍길동",
+                "user_name": "김서점",
                 "rating": 5,
                 "content": "정말 감동적인 소설입니다.",
                 "like_count": 15,
@@ -76,11 +76,12 @@ class ReviewListResponse(BaseModel):
     content: list[ReviewResponse] = Field(..., description="리뷰 목록")
     page: int = Field(..., description="현재 페이지")
     size: int = Field(..., description="페이지 크기")
-    total_elements: int = Field(..., description="전체 리뷰 수")
-    total_pages: int = Field(..., description="전체 페이지 수")
+    total_elements: int = Field(..., alias="totalElements", description="전체 리뷰 수")
+    total_pages: int = Field(..., alias="totalPages", description="전체 페이지 수")
     sort: str = Field(..., description="정렬 기준")
 
     model_config = {
+        "populate_by_name": True,
         "json_schema_extra": {
             "example": {
                 "content": [],

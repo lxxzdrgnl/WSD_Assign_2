@@ -9,10 +9,10 @@ from app.models.user import User
 from app.core.dependencies import get_current_user
 from app.domains.users.schemas import UserResponse, UserUpdateRequest
 from app.domains.users.service import UserService
-from app.schemas.base import BaseResponse
+from app.domains.base import BaseResponse, SuccessResponse
 
 
-router = APIRouter(prefix="/users", tags=["Users"])
+router = APIRouter(prefix="/api/users", tags=["Users"])
 
 
 @router.get(
@@ -36,8 +36,8 @@ def get_my_profile(
     user = UserService.get_profile(db, current_user.id)
 
     return BaseResponse(
-        isSuccess=True,
-        message="Profile retrieved successfully",
+        is_success=True,
+        message="프로필이 성공적으로 조회되었습니다.",
         payload=UserResponse.model_validate(user)
     )
 
@@ -66,15 +66,15 @@ def update_my_profile(
     user = UserService.update_profile(db, current_user.id, data)
 
     return BaseResponse(
-        isSuccess=True,
-        message="Profile updated successfully",
+        is_success=True,
+        message="프로필이 성공적으로 업데이트되었습니다.",
         payload=UserResponse.model_validate(user)
     )
 
 
 @router.delete(
     "/me",
-    response_model=BaseResponse[None],
+    response_model=SuccessResponse,
     status_code=status.HTTP_200_OK,
     summary="계정 삭제",
     description="현재 로그인한 사용자의 계정을 삭제합니다. 관련된 모든 데이터(리뷰, 댓글, 좋아요 등)가 함께 삭제됩니다.",
@@ -100,8 +100,6 @@ def delete_my_account(
     """
     UserService.delete_account(db, current_user.id)
 
-    return BaseResponse(
-        isSuccess=True,
-        message="Account deleted successfully",
-        payload=None
+    return SuccessResponse(
+        message="계정이 성공적으로 삭제되었습니다."
     )

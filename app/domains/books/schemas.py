@@ -74,16 +74,48 @@ class BookResponse(BaseModel):
     updated_at: datetime
     view_count: Optional[int] = 0
 
-    model_config = {"from_attributes": True}
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "example": {
+                "id": 1,
+                "seller_id": 2,
+                "title": "채식주의자",
+                "author": "한강",
+                "publisher": "창비",
+                "summary": "채식을 시작한 여자의 이야기",
+                "isbn": "978893643412000",
+                "price": "10800.00",
+                "publication_date": "2020-01-01",
+                "created_at": "2025-12-06T09:00:00",
+                "updated_at": "2025-12-06T09:00:00",
+                "view_count": 0
+            }
+        }
+    }
 
 
 class BookListResponse(BaseModel):
     content: list[BookResponse]
     page: int
     size: int
-    total_elements: int
-    total_pages: int
+    total_elements: int = Field(..., alias="totalElements")
+    total_pages: int = Field(..., alias="totalPages")
     sort: str
+
+    model_config = {
+        "populate_by_name": True,
+        "json_schema_extra": {
+            "example": {
+                "content": [],
+                "page": 1,
+                "size": 10,
+                "total_elements": 100,
+                "total_pages": 10,
+                "sort": "created_at,desc"
+            }
+        }
+    }
 
 
 class BookSearchParams(BaseModel):

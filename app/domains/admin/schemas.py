@@ -24,10 +24,10 @@ class AdminUserResponse(BaseModel):
         "json_schema_extra": {
             "example": {
                 "id": 1,
-                "role": "CUSTOMER",
-                "email": "user@example.com",
-                "name": "홍길동",
-                "birth_date": "1990-01-01",
+                "role": "ADMIN",
+                "email": "admin@bookstore.com",
+                "name": "관리자",
+                "birth_date": "1980-01-01",
                 "gender": "MALE",
                 "created_at": "2025-12-01T10:00:00"
             }
@@ -40,10 +40,12 @@ class AdminUserListResponse(BaseModel):
     content: list[AdminUserResponse] = Field(..., description="사용자 목록")
     page: int = Field(..., description="현재 페이지")
     size: int = Field(..., description="페이지 크기")
-    total_elements: int = Field(..., description="전체 사용자 수")
-    total_pages: int = Field(..., description="전체 페이지 수")
+    total_elements: int = Field(..., alias="totalElements", description="전체 사용자 수")
+    total_pages: int = Field(..., alias="totalPages", description="전체 페이지 수")
+    sort: str = Field(..., description="정렬 기준")
 
     model_config = {
+        "populate_by_name": True,
         "json_schema_extra": {
             "example": {
                 "content": [],
@@ -107,34 +109,21 @@ class StatsResponse(BaseModel):
 
 class CouponCreateRequest(BaseModel):
     """쿠폰 생성 요청"""
-    code: str = Field(..., min_length=3, max_length=50, description="쿠폰 코드")
-    discount_type: Literal["PERCENTAGE", "FIXED"] = Field(..., description="할인 타입 (PERCENTAGE, FIXED)")
-    discount_value: int = Field(..., gt=0, description="할인 값 (퍼센트 또는 고정 금액)")
-    min_order_amount: Optional[int] = Field(None, ge=0, description="최소 주문 금액")
-    max_discount_amount: Optional[int] = Field(None, ge=0, description="최대 할인 금액 (PERCENTAGE일 때)")
-    valid_from: Optional[datetime] = Field(None, description="유효 시작일")
-    valid_until: Optional[datetime] = Field(None, description="유효 종료일")
+    name: str = Field(..., min_length=3, max_length=100, description="쿠폰 이름")
+    description: Optional[str] = Field(None, max_length=255, description="쿠폰 설명")
+    discount_rate: float = Field(..., gt=0, lt=100, description="할인율 (%)")
+    start_at: datetime = Field(..., description="유효 시작일")
+    end_at: datetime = Field(..., description="유효 종료일")
     is_active: bool = Field(True, description="활성화 여부")
-
-    @field_validator('discount_value')
-    @classmethod
-    def validate_discount_value(cls, v: int, info) -> int:
-        """할인 값 검증"""
-        discount_type = info.data.get('discount_type')
-        if discount_type == "PERCENTAGE" and (v < 1 or v > 100):
-            raise ValueError('Percentage discount must be between 1 and 100')
-        return v
 
     model_config = {
         "json_schema_extra": {
             "example": {
-                "code": "WELCOME10",
-                "discount_type": "PERCENTAGE",
-                "discount_value": 10,
-                "min_order_amount": 10000,
-                "max_discount_amount": 5000,
-                "valid_from": "2025-12-01T00:00:00",
-                "valid_until": "2025-12-31T23:59:59",
+                "name": "연말 감사 쿠폰",
+                "description": "2025년 연말 감사 15% 할인 쿠폰",
+                "discount_rate": 15.0,
+                "start_at": "2025-12-01T00:00:00",
+                "end_at": "2025-12-31T23:59:59",
                 "is_active": True
             }
         }
@@ -144,13 +133,11 @@ class CouponCreateRequest(BaseModel):
 class CouponResponse(BaseModel):
     """쿠폰 응답"""
     id: int = Field(..., description="쿠폰 ID")
-    code: str = Field(..., description="쿠폰 코드")
-    discount_type: Literal["PERCENTAGE", "FIXED"] = Field(..., description="할인 타입")
-    discount_value: int = Field(..., description="할인 값")
-    min_order_amount: Optional[int] = Field(None, description="최소 주문 금액")
-    max_discount_amount: Optional[int] = Field(None, description="최대 할인 금액")
-    valid_from: Optional[datetime] = Field(None, description="유효 시작일")
-    valid_until: Optional[datetime] = Field(None, description="유효 종료일")
+    name: str = Field(..., description="쿠폰 이름")
+    description: Optional[str] = Field(None, description="쿠폰 설명")
+    discount_rate: float = Field(..., description="할인율 (%)")
+    start_at: datetime = Field(..., description="유효 시작일")
+    end_at: datetime = Field(..., description="유효 종료일")
     is_active: bool = Field(..., description="활성화 여부")
     created_at: datetime = Field(..., description="생성일")
 
@@ -159,15 +146,13 @@ class CouponResponse(BaseModel):
         "json_schema_extra": {
             "example": {
                 "id": 1,
-                "code": "WELCOME10",
-                "discount_type": "PERCENTAGE",
-                "discount_value": 10,
-                "min_order_amount": 10000,
-                "max_discount_amount": 5000,
-                "valid_from": "2025-12-01T00:00:00",
-                "valid_until": "2025-12-31T23:59:59",
+                "name": "신규회원10",
+                "description": "신규회원10 쿠폰 - 10% 할인",
+                "discount_rate": 10.0,
+                "start_at": "2025-12-06T12:00:00",
+                "end_at": "2026-12-06T12:00:00",
                 "is_active": True,
-                "created_at": "2025-12-01T10:00:00"
+                "created_at": "2025-12-06T12:00:00"
             }
         }
     }

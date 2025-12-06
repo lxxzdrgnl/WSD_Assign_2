@@ -2,7 +2,7 @@
 Favorites Service
 위시리스트 관련 비즈니스 로직
 """
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 from app.models.favorite import Favorite
@@ -66,8 +66,11 @@ class FavoriteService:
     def get_favorites(
         db: Session,
         user_id: int,
+        keyword: Optional[str] = None,
         page: int = 1,
-        size: int = 20
+        size: int = 20,
+        sort_field: str = "created_at",
+        sort_order: str = "DESC"
     ) -> tuple[list[Favorite], int]:
         """
         위시리스트 조회
@@ -81,14 +84,35 @@ class FavoriteService:
         Returns:
             tuple: (위시리스트 목록, 전체 개수)
         """
-        # 삭제되지 않은 항목만 조회
-        query = db.query(Favorite).filter(
+        # 삭제되지 않은 항목만 조회 및 Book 모델과 조인
+        query = db.query(Favorite).options(joinedload(Favorite.book)).filter(
             Favorite.user_id == user_id,
             Favorite.deleted_at.is_(None)
         )
 
-        # 정렬 (최근 추가순)
-        query = query.order_by(desc(Favorite.created_at))
+        # 필터링
+        if keyword:
+            query = query.join(Book).filter(
+                (Book.title.ilike(f"%{keyword}%")) |
+                (Book.author.ilike(f"%{keyword}%"))
+            )
+
+        # 동적 정렬
+        if sort_field:
+            # Book 모델 필드인 경우 Book 테이블 기준으로 정렬
+            if sort_field in ["book_title", "book_author"]:
+                # 'book_title'은 Book.title, 'book_author'는 Book.author에 해당
+                model_field = getattr(Book, sort_field.replace("book_", ""))
+                if sort_order.upper() == "DESC":
+                    query = query.order_by(desc(model_field))
+                else:
+                    query = query.order_by(model_field)
+            else: # Favorite 모델 필드인 경우
+                model_field = getattr(Favorite, sort_field)
+                if sort_order.upper() == "DESC":
+                    query = query.order_by(desc(model_field))
+                else:
+                    query = query.order_by(model_field)
 
         # 전체 개수
         total = query.count()
@@ -99,12 +123,12 @@ class FavoriteService:
 
         # 도서 정보 추가
         for favorite in favorites:
-            book = db.query(Book).filter(Book.id == favorite.book_id).first()
-            if book:
-                favorite.book_title = book.title
-                favorite.book_author = book.author
-                favorite.book_price = book.price
-                favorite.book_thumbnail = book.thumbnail_url
+            # joinedload를 사용했기 때문에 favorite.book이 이미 로드됨
+            if favorite.book:
+                favorite.book_title = favorite.book.title
+                favorite.book_author = favorite.book.author
+                favorite.book_price = favorite.book.price
+                favorite.book_thumbnail = favorite.book.thumbnail_url
 
         return favorites, total
 

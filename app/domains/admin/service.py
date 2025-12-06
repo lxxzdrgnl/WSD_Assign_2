@@ -24,8 +24,11 @@ class AdminService:
     def get_all_users(
         db: Session,
         role: UserRole = None,
+        keyword: Optional[str] = None,
         page: int = 1,
-        size: int = 20
+        size: int = 20,
+        sort_field: str = "created_at",
+        sort_order: str = "DESC"
     ) -> tuple[list[User], int]:
         """
         전체 사용자 목록 조회
@@ -44,9 +47,18 @@ class AdminService:
         # 필터링
         if role:
             query = query.filter(User.role == role)
+        if keyword:
+            query = query.filter(
+                (User.email.ilike(f"%{keyword}%")) |
+                (User.name.ilike(f"%{keyword}%"))
+            )
 
-        # 정렬 (최신 가입순)
-        query = query.order_by(desc(User.created_at))
+        # 동적 정렬
+        if sort_field:
+            if sort_order.upper() == "DESC":
+                query = query.order_by(desc(getattr(User, sort_field)))
+            else:
+                query = query.order_by(getattr(User, sort_field))
 
         # 전체 개수
         total = query.count()
@@ -178,22 +190,20 @@ class AdminService:
             Coupon: 생성된 쿠폰
 
         Raises:
-            ConflictException: 쿠폰 코드 중복
+            ConflictException: 쿠폰 이름 중복
         """
-        # 쿠폰 코드 중복 확인
-        existing = db.query(Coupon).filter(Coupon.code == data.code).first()
+        # 쿠폰 이름 중복 확인
+        existing = db.query(Coupon).filter(Coupon.name == data.name).first()
         if existing:
-            raise ConflictException("COUPON_CODE_ALREADY_EXISTS", "Coupon code already exists")
+            raise ConflictException("COUPON_NAME_ALREADY_EXISTS", "Coupon with this name already exists")
 
         # 쿠폰 생성
         coupon = Coupon(
-            code=data.code,
-            discount_type=data.discount_type,
-            discount_value=data.discount_value,
-            min_order_amount=data.min_order_amount,
-            max_discount_amount=data.max_discount_amount,
-            valid_from=data.valid_from,
-            valid_until=data.valid_until,
+            name=data.name,
+            description=data.description,
+            discount_rate=data.discount_rate,
+            start_at=data.start_at,
+            end_at=data.end_at,
             is_active=data.is_active
         )
 

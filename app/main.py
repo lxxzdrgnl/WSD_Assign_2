@@ -5,6 +5,10 @@ FastAPI Application Entry Point
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.middleware import SlowAPIMiddleware
+from app.core.limiter import limiter
+from app.middleware.logging import logging_middleware
 from app.middleware.error_handler import add_error_handlers
 from app.domains.health.router import router as health_router
 from app.domains.auth.router import router as auth_router
@@ -27,6 +31,13 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+# 레이트 리미터 설정
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
+
+# 로깅 미드웨어 추가
+app.middleware("http")(logging_middleware)
 
 # CORS 설정
 app.add_middleware(

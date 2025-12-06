@@ -53,14 +53,14 @@ class CartItemResponse(BaseModel):
         "json_schema_extra": {
             "example": {
                 "id": 1,
-                "user_id": 1,
+                "user_id": 11,
                 "book_id": 1,
-                "book_title": "The Great Gatsby",
-                "book_author": "F. Scott Fitzgerald",
-                "book_price": 15000,
-                "book_thumbnail": "https://example.com/thumbnail.jpg",
+                "book_title": "채식주의자",
+                "book_author": "한강",
+                "book_price": 10800,
+                "book_thumbnail": None,
                 "quantity": 2,
-                "subtotal": 30000,
+                "subtotal": 21600,
                 "created_at": "2025-12-06T13:00:00"
             }
         }

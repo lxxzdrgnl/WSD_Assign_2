@@ -15,8 +15,11 @@ class LibraryService:
     def get_purchased_books(
         db: Session,
         user_id: int,
+        keyword: Optional[str] = None,
         page: int = 1,
-        size: int = 20
+        size: int = 20,
+        sort_field: str = "order_date", # Default sort to 'order_date' for library
+        sort_order: str = "DESC"
     ) -> tuple[list[dict], int]:
         """
         구매한 도서 목록 조회 (DELIVERED 상태)
@@ -38,7 +41,26 @@ class LibraryService:
         ).filter(
             Order.user_id == user_id,
             Order.status == OrderStatus.DELIVERED
-        ).order_by(desc(Order.created_at))
+        )
+
+        # 필터링
+        if keyword:
+            query = query.filter(
+                (Book.title.ilike(f"%{keyword}%")) |
+                (Book.author.ilike(f"%{keyword}%"))
+            )
+
+        # 동적 정렬
+        if sort_field:
+            if sort_field == "order_date":
+                model_field = Order.created_at # Map 'order_date' to Order.created_at
+            else: # title, author
+                model_field = getattr(Book, sort_field)
+
+            if sort_order.upper() == "DESC":
+                query = query.order_by(desc(model_field))
+            else:
+                query = query.order_by(model_field)
 
         # 전체 개수
         total = query.count()

@@ -5,7 +5,7 @@ Reviews Router
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.core.dependencies import get_current_user, get_optional_user
+from app.core.dependencies import get_current_user, get_optional_user, get_sort_params
 from app.models.user import User
 from app.domains.reviews.schemas import (
     ReviewCreateRequest,
@@ -15,12 +15,12 @@ from app.domains.reviews.schemas import (
     LikeToggleResponse
 )
 from app.domains.reviews.service import ReviewService
-from app.domains.base import BaseResponse
+from app.domains.base import BaseResponse, SuccessResponse
 from typing import Optional
 import math
 
 
-router = APIRouter(prefix="/api/v1/reviews", tags=["Reviews"])
+router = APIRouter(prefix="/api/reviews", tags=["Reviews"])
 
 
 @router.post(
@@ -45,7 +45,7 @@ def create_review(
 
     return BaseResponse(
         is_success=True,
-        message="Review created successfully",
+        message="리뷰가 성공적으로 생성되었습니다.",
         payload=ReviewResponse.model_validate(review)
     )
 
@@ -65,10 +65,14 @@ def get_reviews(
     page: int = Query(1, ge=1, description="페이지 번호"),
     size: int = Query(10, ge=1, le=100, description="페이지 크기"),
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_optional_user)
+    current_user: Optional[User] = Depends(get_optional_user),
+    sort_params: Optional[tuple[str, str]] = Depends(get_sort_params(
+        allowed_fields=["created_at", "rating", "like_count"]
+    ))
 ):
     """리뷰 목록 조회"""
     current_user_id = current_user.id if current_user else None
+    sort_field, sort_order = sort_params if sort_params else ("created_at", "DESC")
 
     reviews, total = ReviewService.get_reviews(
         db=db,
@@ -76,8 +80,8 @@ def get_reviews(
         book_id=book_id,
         user_id=user_id,
         min_rating=min_rating,
-        sort=sort,
-        order=order,
+        sort=sort_field,
+        order=sort_order,
         page=page,
         size=size
     )
@@ -85,18 +89,20 @@ def get_reviews(
     # 응답 데이터 구성
     review_list = [ReviewResponse.model_validate(review) for review in reviews]
     total_pages = math.ceil(total / size) if total > 0 else 0
+    
+    payload_data = ReviewListResponse(
+        content=review_list,
+        page=page,
+        size=size,
+        total_elements=total,
+        total_pages=total_pages,
+        sort=f"{sort_field},{sort_order}"
+    ).model_dump(by_alias=True) # model_dump with by_alias=True to handle camelCase
 
     return BaseResponse(
         is_success=True,
-        message="Reviews retrieved successfully",
-        payload=ReviewListResponse(
-            content=review_list,
-            page=page,
-            size=size,
-            total_elements=total,
-            total_pages=total_pages,
-            sort=f"{sort},{order}"
-        )
+        message="리뷰 목록이 성공적으로 조회되었습니다.",
+        payload=ReviewListResponse(**payload_data)
     )
 
 
@@ -117,7 +123,7 @@ def get_review(
 
     return BaseResponse(
         is_success=True,
-        message="Review retrieved successfully",
+        message="리뷰가 성공적으로 조회되었습니다.",
         payload=ReviewResponse.model_validate(review)
     )
 
@@ -142,14 +148,14 @@ def update_review(
 
     return BaseResponse(
         is_success=True,
-        message="Review updated successfully",
+        message="리뷰가 성공적으로 업데이트되었습니다.",
         payload=ReviewResponse.model_validate(review)
     )
 
 
 @router.delete(
     "/{review_id}",
-    response_model=BaseResponse[None],
+    response_model=SuccessResponse,
     summary="리뷰 삭제",
     description="본인이 작성한 리뷰를 삭제합니다."
 )
@@ -161,10 +167,8 @@ def delete_review(
     """리뷰 삭제 (본인만 가능)"""
     ReviewService.delete_review(db, review_id, current_user.id)
 
-    return BaseResponse(
-        is_success=True,
-        message="Review deleted successfully",
-        payload=None
+    return SuccessResponse(
+        message="리뷰가 성공적으로 삭제되었습니다."
     )
 
 
@@ -184,6 +188,6 @@ def toggle_like(
 
     return BaseResponse(
         is_success=True,
-        message="Like toggled successfully",
+        message="좋아요가 성공적으로 처리되었습니다.",
         payload=LikeToggleResponse(is_liked=is_liked, like_count=like_count)
     )

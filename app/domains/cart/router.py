@@ -14,10 +14,10 @@ from app.domains.cart.schemas import (
     CartListResponse
 )
 from app.domains.cart.service import CartService
-from app.domains.base import BaseResponse
+from app.domains.base import BaseResponse, SuccessResponse
 
 
-router = APIRouter(prefix="/api/v1/cart", tags=["Cart"])
+router = APIRouter(prefix="/api/cart", tags=["Cart"])
 
 
 @router.post(
@@ -47,7 +47,7 @@ def add_to_cart(
 
     return BaseResponse(
         is_success=True,
-        message="Added to cart successfully",
+        message="장바구니에 성공적으로 추가되었습니다.",
         payload=CartItemResponse.model_validate(cart_item)
     )
 
@@ -73,7 +73,7 @@ def get_cart(
 
     return BaseResponse(
         is_success=True,
-        message="Cart retrieved successfully",
+        message="장바구니를 성공적으로 조회했습니다.",
         payload=CartListResponse(
             items=item_list,
             total_items=total_items,
@@ -110,14 +110,14 @@ def update_quantity(
 
     return BaseResponse(
         is_success=True,
-        message="Cart updated successfully",
+        message="장바구니가 성공적으로 업데이트되었습니다.",
         payload=CartItemResponse.model_validate(cart_item)
     )
 
 
 @router.delete(
     "/{cart_item_id}",
-    response_model=BaseResponse[None],
+    response_model=SuccessResponse,
     summary="항목 삭제",
     description="장바구니에서 항목을 삭제합니다."
 )
@@ -129,8 +129,6 @@ def delete_from_cart(
     """항목 삭제"""
     CartService.delete_from_cart(db, cart_item_id, current_user.id)
 
-    return BaseResponse(
-        is_success=True,
-        message="Cart item deleted successfully",
-        payload=None
+    return SuccessResponse(
+        message="장바구니 항목이 성공적으로 삭제되었습니다.",
     )

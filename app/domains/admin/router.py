@@ -5,7 +5,7 @@ Admin Router
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.core.dependencies import get_current_user, require_role
+from app.core.dependencies import get_current_user, require_role, get_sort_params
 from app.models.user import User, UserRole
 from app.domains.admin.schemas import (
     AdminUserResponse,
@@ -17,12 +17,12 @@ from app.domains.admin.schemas import (
     CouponResponse
 )
 from app.domains.admin.service import AdminService
-from app.domains.base import BaseResponse
+from app.domains.base import BaseResponse, SuccessResponse
 from typing import Optional
 import math
 
 
-router = APIRouter(prefix="/api/v1/admin", tags=["Admin"])
+router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
 
 @router.get(
@@ -34,33 +34,45 @@ router = APIRouter(prefix="/api/v1/admin", tags=["Admin"])
 )
 def get_all_users(
     role: Optional[UserRole] = Query(None, description="역할 필터"),
+    keyword: Optional[str] = Query(None, description="검색 키워드 (이메일 또는 이름)"),
     page: int = Query(1, ge=1, description="페이지 번호"),
     size: int = Query(20, ge=1, le=100, description="페이지 크기"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    sort_params: Optional[tuple[str, str]] = Depends(get_sort_params(
+        allowed_fields=["id", "email", "name", "created_at", "role"]
+    ))
 ):
     """전체 사용자 목록 조회 (ADMIN)"""
+    sort_field, sort_order = sort_params if sort_params else ("created_at", "DESC")
+
     users, total = AdminService.get_all_users(
         db=db,
         role=role,
+        keyword=keyword,
         page=page,
-        size=size
+        size=size,
+        sort_field=sort_field,
+        sort_order=sort_order
     )
 
     # 응답 데이터 구성
     user_list = [AdminUserResponse.model_validate(user) for user in users]
     total_pages = math.ceil(total / size) if total > 0 else 0
 
+    payload_data = AdminUserListResponse(
+        content=user_list,
+        page=page,
+        size=size,
+        total_elements=total,
+        total_pages=total_pages,
+        sort=f"{sort_field},{sort_order}"
+    ).model_dump(by_alias=True) # model_dump with by_alias=True to handle camelCase
+
     return BaseResponse(
         is_success=True,
-        message="Users retrieved successfully",
-        payload=AdminUserListResponse(
-            content=user_list,
-            page=page,
-            size=size,
-            total_elements=total,
-            total_pages=total_pages
-        )
+        message="사용자 목록을 성공적으로 조회했습니다.",
+        payload=AdminUserListResponse(**payload_data)
     )
 
 
@@ -82,7 +94,7 @@ def update_user_role(
 
     return BaseResponse(
         is_success=True,
-        message="User role updated successfully",
+        message="사용자 역할이 성공적으로 업데이트되었습니다.",
         payload=AdminUserResponse.model_validate(user)
     )
 
@@ -103,14 +115,14 @@ def get_stats(
 
     return BaseResponse(
         is_success=True,
-        message="Stats retrieved successfully",
+        message="통계를 성공적으로 조회했습니다.",
         payload=StatsResponse(**stats)
     )
 
 
 @router.patch(
     "/orders/{order_id}/status",
-    response_model=BaseResponse[None],
+    response_model=SuccessResponse,
     summary="주문 상태 변경",
     description="관리자 전용: 주문 상태를 변경합니다.",
     dependencies=[Depends(require_role([UserRole.ADMIN]))]
@@ -124,10 +136,8 @@ def update_order_status(
     """주문 상태 변경 (ADMIN)"""
     AdminService.update_order_status(db, order_id, data)
 
-    return BaseResponse(
-        is_success=True,
-        message="Order status updated successfully",
-        payload=None
+    return SuccessResponse(
+        message="주문 상태가 성공적으로 업데이트되었습니다.",
     )
 
 
@@ -149,14 +159,14 @@ def create_coupon(
 
     return BaseResponse(
         is_success=True,
-        message="Coupon created successfully",
+        message="쿠폰이 성공적으로 생성되었습니다.",
         payload=CouponResponse.model_validate(coupon)
     )
 
 
 @router.post(
     "/coupons/{coupon_id}/issue/{user_id}",
-    response_model=BaseResponse[None],
+    response_model=SuccessResponse,
     status_code=status.HTTP_201_CREATED,
     summary="쿠폰 발급",
     description="관리자 전용: 특정 사용자에게 쿠폰을 발급합니다.",
@@ -171,8 +181,6 @@ def issue_coupon(
     """쿠폰 발급 (ADMIN)"""
     AdminService.issue_coupon_to_user(db, coupon_id, user_id)
 
-    return BaseResponse(
-        is_success=True,
-        message="Coupon issued successfully",
-        payload=None
+    return SuccessResponse(
+        message="쿠폰이 성공적으로 발급되었습니다."
     )

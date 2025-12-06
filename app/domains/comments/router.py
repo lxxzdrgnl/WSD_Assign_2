@@ -15,12 +15,12 @@ from app.domains.comments.schemas import (
     LikeToggleResponse
 )
 from app.domains.comments.service import CommentService
-from app.domains.base import BaseResponse
+from app.domains.base import BaseResponse, SuccessResponse
 from typing import Optional
 import math
 
 
-router = APIRouter(prefix="/api/v1/comments", tags=["Comments"])
+router = APIRouter(prefix="/api/comments", tags=["Comments"])
 
 
 @router.post(
@@ -45,7 +45,7 @@ def create_comment(
 
     return BaseResponse(
         is_success=True,
-        message="Comment created successfully",
+        message="댓글이 성공적으로 생성되었습니다.",
         payload=CommentResponse.model_validate(comment)
     )
 
@@ -82,7 +82,7 @@ def get_comments(
 
     return BaseResponse(
         is_success=True,
-        message="Comments retrieved successfully",
+        message="댓글 목록이 성공적으로 조회되었습니다.",
         payload=CommentListResponse(
             content=comment_list,
             page=page,
@@ -110,7 +110,7 @@ def get_comment(
 
     return BaseResponse(
         is_success=True,
-        message="Comment retrieved successfully",
+        message="댓글이 성공적으로 조회되었습니다.",
         payload=CommentResponse.model_validate(comment)
     )
 
@@ -135,14 +135,14 @@ def update_comment(
 
     return BaseResponse(
         is_success=True,
-        message="Comment updated successfully",
+        message="댓글이 성공적으로 업데이트되었습니다.",
         payload=CommentResponse.model_validate(comment)
     )
 
 
 @router.delete(
     "/{comment_id}",
-    response_model=BaseResponse[None],
+    response_model=SuccessResponse,
     summary="댓글 삭제",
     description="본인이 작성한 댓글을 삭제합니다."
 )
@@ -154,10 +154,8 @@ def delete_comment(
     """댓글 삭제 (본인만 가능)"""
     CommentService.delete_comment(db, comment_id, current_user.id)
 
-    return BaseResponse(
-        is_success=True,
-        message="Comment deleted successfully",
-        payload=None
+    return SuccessResponse(
+        message="댓글이 성공적으로 삭제되었습니다."
     )
 
 
@@ -177,6 +175,6 @@ def toggle_like(
 
     return BaseResponse(
         is_success=True,
-        message="Like toggled successfully",
+        message="좋아요가 성공적으로 처리되었습니다.",
         payload=LikeToggleResponse(is_liked=is_liked, like_count=like_count)
     )

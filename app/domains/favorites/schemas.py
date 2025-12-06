@@ -36,12 +36,12 @@ class FavoriteResponse(BaseModel):
         "json_schema_extra": {
             "example": {
                 "id": 1,
-                "user_id": 1,
+                "user_id": 11,
                 "book_id": 1,
-                "book_title": "The Great Gatsby",
-                "book_author": "F. Scott Fitzgerald",
-                "book_price": 15000,
-                "book_thumbnail": "https://example.com/thumbnail.jpg",
+                "book_title": "채식주의자",
+                "book_author": "한강",
+                "book_price": 10800,
+                "book_thumbnail": None,
                 "created_at": "2025-12-06T12:00:00"
             }
         }
@@ -53,10 +53,12 @@ class FavoriteListResponse(BaseModel):
     content: list[FavoriteResponse] = Field(..., description="위시리스트 목록")
     page: int = Field(..., description="현재 페이지")
     size: int = Field(..., description="페이지 크기")
-    total_elements: int = Field(..., description="전체 개수")
-    total_pages: int = Field(..., description="전체 페이지 수")
+    total_elements: int = Field(..., alias="totalElements", description="전체 개수")
+    total_pages: int = Field(..., alias="totalPages", description="전체 페이지 수")
+    sort: str = Field(..., description="정렬 기준")
 
     model_config = {
+        "populate_by_name": True,
         "json_schema_extra": {
             "example": {
                 "content": [],

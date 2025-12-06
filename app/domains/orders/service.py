@@ -151,7 +151,9 @@ class OrderService:
         user_id: int,
         status: Optional[OrderStatus] = None,
         page: int = 1,
-        size: int = 10
+        size: int = 10,
+        sort_field: str = "created_at",
+        sort_order: str = "DESC"
     ) -> tuple[list[Order], int]:
         """
         주문 목록 조회
@@ -172,8 +174,12 @@ class OrderService:
         if status:
             query = query.filter(Order.status == status)
 
-        # 정렬 (최신순)
-        query = query.order_by(desc(Order.created_at))
+        # 동적 정렬
+        if sort_field:
+            if sort_order.upper() == "DESC":
+                query = query.order_by(desc(getattr(Order, sort_field)))
+            else:
+                query = query.order_by(getattr(Order, sort_field))
 
         # 전체 개수
         total = query.count()

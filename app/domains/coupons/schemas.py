@@ -1,17 +1,13 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
-from decimal import Decimal
 
 
 class CouponResponse(BaseModel):
     id: int
     name: str
     description: Optional[str] = None
-    discount_type: str  # PERCENTAGE or FIXED
-    discount_value: Decimal
-    max_discount_amount: Optional[int] = None
-    min_order_amount: Optional[int] = None
+    discount_rate: float
     start_at: datetime
     end_at: datetime
     is_active: bool
@@ -22,16 +18,13 @@ class CouponResponse(BaseModel):
         "json_schema_extra": {
             "example": {
                 "id": 1,
-                "name": "신규 회원 10% 할인",
-                "description": "첫 구매 시 10% 할인",
-                "discount_type": "PERCENTAGE",
-                "discount_value": 10.0,
-                "max_discount_amount": 5000,
-                "min_order_amount": 10000,
-                "start_at": "2025-01-01T00:00:00",
-                "end_at": "2025-12-31T23:59:59",
+                "name": "신규회원10",
+                "description": "신규회원10 쿠폰 - 10% 할인",
+                "discount_rate": 10.0,
+                "start_at": "2025-12-01T00:00:00",
+                "end_at": "2026-12-01T23:59:59",
                 "is_active": True,
-                "created_at": "2025-01-01T00:00:00"
+                "created_at": "2025-12-01T00:00:00"
             }
         }
     }
@@ -42,10 +35,7 @@ class UserCouponResponse(BaseModel):
     coupon_id: int
     coupon_name: str
     description: Optional[str] = None
-    discount_type: str
-    discount_value: Decimal
-    max_discount_amount: Optional[int] = None
-    min_order_amount: Optional[int] = None
+    discount_rate: float
     is_used: bool
     used_at: Optional[datetime] = None
     assigned_at: datetime
@@ -59,17 +49,14 @@ class UserCouponResponse(BaseModel):
             "example": {
                 "id": 1,
                 "coupon_id": 1,
-                "coupon_name": "신규 회원 10% 할인",
-                "description": "첫 구매 시 10% 할인",
-                "discount_type": "PERCENTAGE",
-                "discount_value": 10.0,
-                "max_discount_amount": 5000,
-                "min_order_amount": 10000,
+                "coupon_name": "신규회원10",
+                "description": "신규회원10 쿠폰 - 10% 할인",
+                "discount_rate": 10.0,
                 "is_used": False,
                 "used_at": None,
-                "assigned_at": "2025-01-01T00:00:00",
-                "start_at": "2025-01-01T00:00:00",
-                "end_at": "2025-12-31T23:59:59",
+                "assigned_at": "2025-12-01T00:00:00",
+                "start_at": "2025-12-01T00:00:00",
+                "end_at": "2026-12-01T23:59:59",
                 "is_active": True
             }
         }
@@ -78,20 +65,22 @@ class UserCouponResponse(BaseModel):
 
 class CouponListResponse(BaseModel):
     content: list[CouponResponse]
-    total: int
+    page: int = Field(..., description="현재 페이지")
+    size: int = Field(..., description="페이지 크기")
+    total_elements: int = Field(..., alias="totalElements", description="전체 쿠폰 수")
+    total_pages: int = Field(..., alias="totalPages", description="전체 페이지 수")
+    sort: str = Field(..., description="정렬 기준")
 
     model_config = {
+        "populate_by_name": True,
         "json_schema_extra": {
             "example": {
                 "content": [
                     {
                         "id": 1,
-                        "name": "신규 회원 10% 할인",
-                        "description": "첫 구매 시 10% 할인",
-                        "discount_type": "PERCENTAGE",
-                        "discount_value": 10.0,
-                        "max_discount_amount": 5000,
-                        "min_order_amount": 10000,
+                        "name": "신규회원10",
+                        "description": "신규회원10 쿠폰 - 10% 할인",
+                        "discount_rate": 10.0,
                         "start_at": "2025-01-01T00:00:00",
                         "end_at": "2025-12-31T23:59:59",
                         "is_active": True,
@@ -106,10 +95,15 @@ class CouponListResponse(BaseModel):
 
 class MyCouponListResponse(BaseModel):
     content: list[UserCouponResponse]
-    total: int
+    page: int = Field(..., description="현재 페이지")
+    size: int = Field(..., description="페이지 크기")
+    total_elements: int = Field(..., alias="totalElements", description="전체 쿠폰 수")
+    total_pages: int = Field(..., alias="totalPages", description="전체 페이지 수")
+    sort: str = Field(..., description="정렬 기준")
     unused_count: int
 
     model_config = {
+        "populate_by_name": True,
         "json_schema_extra": {
             "example": {
                 "content": [],

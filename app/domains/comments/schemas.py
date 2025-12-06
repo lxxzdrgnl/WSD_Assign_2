@@ -56,8 +56,8 @@ class CommentResponse(BaseModel):
             "example": {
                 "id": 1,
                 "review_id": 1,
-                "user_id": 3,
-                "user_name": "김철수",
+                "user_id": 11,
+                "user_name": "김민준",
                 "parent_id": None,
                 "content": "좋은 리뷰 감사합니다!",
                 "like_count": 5,
