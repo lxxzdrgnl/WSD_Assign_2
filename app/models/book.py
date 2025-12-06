@@ -2,7 +2,7 @@
 Book Models
 도서 및 조회 기록 관련 모델
 """
-from sqlalchemy import Column, BigInteger, String, Date, DateTime, ForeignKey, DECIMAL, Text
+from sqlalchemy import Column, BigInteger, Integer, String, Date, DateTime, ForeignKey, DECIMAL, Text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -12,7 +12,7 @@ class Book(Base):
     """도서 테이블"""
     __tablename__ = "books"
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True, comment="도서 고유 ID")
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="도서 고유 ID")
     seller_id = Column(
         BigInteger,
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -49,7 +49,7 @@ class BookView(Base):
     """도서 조회 기록 테이블 (조회수, 인기도서 조회 사용)"""
     __tablename__ = "books_view"
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True, comment="조회 기록 ID")
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="조회 기록 ID")
     user_id = Column(
         BigInteger,
         ForeignKey("users.id", ondelete="SET NULL"),

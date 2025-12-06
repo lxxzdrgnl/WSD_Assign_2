@@ -15,7 +15,7 @@ class Review(Base):
         CheckConstraint("rating >= 1 AND rating <= 5", name="check_rating_range"),
     )
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True, comment="리뷰 ID")
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="리뷰 ID")
     user_id = Column(
         BigInteger,
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -64,7 +64,7 @@ class ReviewLike(Base):
         UniqueConstraint("review_id", "user_id", name="unique_review_like"),
     )
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True, comment="리뷰 좋아요 ID")
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="리뷰 좋아요 ID")
     review_id = Column(
         BigInteger,
         ForeignKey("reviews.id", ondelete="CASCADE"),

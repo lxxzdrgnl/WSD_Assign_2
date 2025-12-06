@@ -507,5 +507,85 @@ class PaginationParams(BaseModel):
 
 ---
 
+## 14. 구현 진행 상황 (2025-12-06)
+
+### ✅ 완료된 작업
+
+#### Phase 1-2: 기반 구축 및 인증 시스템
+1. **프로젝트 구조 생성** - 도메인 기반 폴더 구조 완성
+2. **데이터베이스 모델** - 15개 테이블 SQLAlchemy 모델 정의 완료
+3. **SQLite 호환성 수정** - INTEGER autoincrement 문제 해결
+   - 모든 모델의 primary key를 BigInteger → Integer로 변경
+   - 모든 모델 파일의 import 문 수정 완료
+4. **JWT 인증 시스템** - bcrypt 직접 사용으로 72-byte 제한 처리
+5. **RBAC 권한 시스템** - CUSTOMER, SELLER, ADMIN 역할 구분
+6. **에러 핸들러** - 전역 예외 처리 미들웨어 구현
+7. **Auth 도메인 완성**
+   - ✅ POST /api/v1/auth/signup - 회원가입 (Pydantic validation 포함)
+   - ✅ POST /api/v1/auth/login - 로그인 및 JWT 토큰 발급
+   - ✅ POST /api/v1/auth/logout - 로그아웃 (구현 완료, 테스트 대기)
+   - ✅ POST /api/v1/auth/refresh - 토큰 갱신 (구현 완료, 테스트 대기)
+8. **헬스체크** - GET /health 엔드포인트 작동 확인
+
+#### 테스트 결과
+```bash
+# Health Check
+GET /health → 200 OK
+{"status":"healthy","timestamp":"2025-12-06T05:47:10Z",...}
+
+# Signup
+POST /api/v1/auth/signup → 201 Created
+{"isSuccess":true,"payload":{"user_id":1,"created_at":"2025-12-06T05:48:13"}}
+
+# Login
+POST /api/v1/auth/login → 200 OK
+{"isSuccess":true,"payload":{"access_token":"eyJ...","refresh_token":"eyJ...","expires_in":3600}}
+```
+
+#### 주요 수정 사항
+- **bcrypt 통합**: passlib 대신 bcrypt 직접 사용하여 72-byte password 제한 처리
+- **SQLite PRIMARY KEY**: 모든 테이블 ID를 INTEGER로 변경 (BIGINT는 SQLite에서 autoincrement 미지원)
+- **Pydantic validation**: 비밀번호 강도 검증 (대소문자, 숫자, 특수문자 필수)
+
+### 📋 다음 작업 (우선순위 순)
+
+1. **Books 도메인 구현** (5개 엔드포인트)
+   - POST /api/v1/books - 도서 등록 (SELLER)
+   - GET /api/v1/books - 도서 목록 (검색/정렬/페이지네이션)
+   - GET /api/v1/books/{bookId} - 도서 상세 조회
+   - PATCH /api/v1/books/{bookId} - 도서 수정 (SELLER)
+   - DELETE /api/v1/books/{bookId} - 도서 삭제 (SELLER)
+
+2. **Users 도메인 구현** (3개 엔드포인트)
+   - GET /api/v1/users/me - 프로필 조회
+   - PATCH /api/v1/users/me - 프로필 수정
+   - DELETE /api/v1/users/me - 계정 삭제
+
+3. **Reviews 도메인 구현** (5개 엔드포인트)
+4. **Comments 도메인 구현** (5개 엔드포인트)
+5. **Favorites, Cart, Orders 도메인 구현**
+6. **Admin 도메인 구현**
+7. **시드 데이터 스크립트 작성**
+8. **자동화 테스트 20+개 작성**
+9. **Swagger 문서화 및 Postman 컬렉션**
+10. **JCloud 배포**
+
+### 📊 현재 진행률
+- **완료된 엔드포인트**: 5/38 (13%)
+  - Health: 1/1 ✅
+  - Auth: 4/4 ✅
+  - Books: 0/5
+  - Users: 0/3
+  - Reviews: 0/5
+  - Comments: 0/5
+  - Favorites: 0/3
+  - Cart: 0/4
+  - Orders: 0/4
+  - Library: 0/1
+  - Admin: 0/5
+
+---
+
 **작성일**: 2025-12-05
+**업데이트**: 2025-12-06 14:50 KST
 **예상 완료일**: 2025-12-13 (제출 마감: 12월 14일 23:59)

@@ -2,7 +2,7 @@
 Comment Models
 댓글 및 댓글 좋아요 관련 모델
 """
-from sqlalchemy import Column, BigInteger, Text, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, BigInteger, Integer, Text, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -12,7 +12,7 @@ class Comment(Base):
     """댓글 테이블 (리뷰에 대한 댓글)"""
     __tablename__ = "comments"
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True, comment="댓글 ID")
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="댓글 ID")
     review_id = Column(
         BigInteger,
         ForeignKey("reviews.id", ondelete="CASCADE"),
@@ -59,7 +59,7 @@ class CommentLike(Base):
         UniqueConstraint("comment_id", "user_id", name="unique_comment_like"),
     )
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True, comment="댓글 좋아요 ID")
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="댓글 좋아요 ID")
     comment_id = Column(
         BigInteger,
         ForeignKey("comments.id", ondelete="CASCADE"),

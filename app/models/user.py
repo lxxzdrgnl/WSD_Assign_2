@@ -2,7 +2,7 @@
 User Models
 사용자 및 인증 관련 모델
 """
-from sqlalchemy import Column, BigInteger, String, Enum, Date, DateTime, ForeignKey
+from sqlalchemy import Column, BigInteger, Integer, String, Enum, Date, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import enum
@@ -26,7 +26,7 @@ class User(Base):
     """사용자 테이블"""
     __tablename__ = "users"
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True, comment="사용자 고유 ID")
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="사용자 고유 ID")
     role = Column(
         Enum(UserRole),
         nullable=False,
@@ -66,7 +66,7 @@ class RefreshToken(Base):
     """Refresh Token 테이블"""
     __tablename__ = "refresh_tokens"
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True, comment="Refresh Token 고유 ID")
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="Refresh Token 고유 ID")
     user_id = Column(
         BigInteger,
         ForeignKey("users.id", ondelete="CASCADE"),

@@ -2,7 +2,7 @@
 Coupon Models
 쿠폰 및 사용자 쿠폰 관련 모델
 """
-from sqlalchemy import Column, BigInteger, String, DECIMAL, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, BigInteger, Integer, String, DECIMAL, Boolean, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -12,7 +12,7 @@ class Coupon(Base):
     """쿠폰 테이블"""
     __tablename__ = "coupons"
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True, comment="쿠폰 ID")
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="쿠폰 ID")
     name = Column(String(100), nullable=False, comment="쿠폰명")
     description = Column(String(255), nullable=True, comment="쿠폰 설명")
     discount_rate = Column(DECIMAL(5, 2), nullable=False, comment="할인율 (%)")
@@ -36,7 +36,7 @@ class UserCoupon(Base):
     """사용자 쿠폰 테이블 (발급 및 사용 현황)"""
     __tablename__ = "user_coupons"
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True, comment="사용자 쿠폰 ID")
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="사용자 쿠폰 ID")
     user_id = Column(
         BigInteger,
         ForeignKey("users.id", ondelete="CASCADE"),

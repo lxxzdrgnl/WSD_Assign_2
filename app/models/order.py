@@ -22,7 +22,7 @@ class Order(Base):
     """주문 테이블"""
     __tablename__ = "orders"
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True, comment="주문 ID")
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="주문 ID")
     user_id = Column(
         BigInteger,
         ForeignKey("users.id", ondelete="SET NULL"),
@@ -57,7 +57,7 @@ class OrderItem(Base):
     """주문 상세 항목 테이블"""
     __tablename__ = "order_items"
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True, comment="주문 상세 ID")
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="주문 상세 ID")
     order_id = Column(
         BigInteger,
         ForeignKey("orders.id", ondelete="CASCADE"),

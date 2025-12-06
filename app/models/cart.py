@@ -12,7 +12,7 @@ class Cart(Base):
     """장바구니 테이블 (수량 수정, 삭제 저장 - 통계용)"""
     __tablename__ = "carts"
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True, comment="장바구니 ID")
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="장바구니 ID")
     user_id = Column(
         BigInteger,
         ForeignKey("users.id", ondelete="CASCADE"),

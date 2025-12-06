@@ -2,7 +2,7 @@
 Favorite Models
 위시리스트(즐겨찾기) 관련 모델
 """
-from sqlalchemy import Column, BigInteger, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, BigInteger, Integer, Boolean, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -12,7 +12,7 @@ class Favorite(Base):
     """즐겨찾기(위시리스트) 테이블 (삭제 여부 추적 - 통계용)"""
     __tablename__ = "favorites"
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True, comment="즐겨찾기 ID")
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="즐겨찾기 ID")
     user_id = Column(
         BigInteger,
         ForeignKey("users.id", ondelete="CASCADE"),
