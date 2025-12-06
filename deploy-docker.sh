@@ -11,7 +11,7 @@ echo $GH_TOKEN | docker login ghcr.io -u $GH_USER --password-stdin
 
 # 2. Pull the latest Docker image
 echo "Pulling latest Docker image..."
-docker pull ghcr.io/lxxzdrgnl/WSD_Assign_2:latest
+docker pull ghcr.io/lxxzdrgnl/wsd_assign_2:latest
 
 # 3. Stop and restart services with Docker Compose
 echo "Restarting services with Docker Compose..."

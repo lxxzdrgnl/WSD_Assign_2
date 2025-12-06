@@ -12,7 +12,7 @@ from pathlib import Path
 # 프로젝트 루트를 Python path에 추가
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-from app.config import settings
+from app.core.config import settings
 from app.database import Base
 
 # 모든 모델 import (Alembic이 테이블을 인식하도록)
