@@ -2,7 +2,7 @@
 Order Models
 주문 및 주문 상세 항목 관련 모델
 """
-from sqlalchemy import Column, BigInteger, Enum, DECIMAL, DateTime, ForeignKey, Integer
+from sqlalchemy import Column, BigInteger, Enum, DECIMAL, DateTime, ForeignKey, Integer, String
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 import enum
@@ -11,11 +11,11 @@ from app.core.database import Base
 
 class OrderStatus(str, enum.Enum):
     """주문 상태"""
-    CREATED = "CREATED"      # 주문 생성
-    PAID = "PAID"            # 결제 완료
-    SHIPPED = "SHIPPED"      # 배송 중
-    DELIVERED = "DELIVERED"  # 배송 완료
-    CANCELED = "CANCELED"    # 주문 취소
+    PENDING = "PENDING"          # 주문 대기
+    CONFIRMED = "CONFIRMED"      # 주문 확정
+    SHIPPED = "SHIPPED"          # 배송 중
+    DELIVERED = "DELIVERED"      # 배송 완료
+    CANCELLED = "CANCELLED"      # 주문 취소
 
 
 class Order(Base):
@@ -30,11 +30,14 @@ class Order(Base):
         index=True,
         comment="주문자 ID"
     )
-    total_price = Column(DECIMAL(15, 2), nullable=False, comment="총 결제 금액")
+    total_price = Column(DECIMAL(15, 2), nullable=False, comment="상품 총 금액")
+    discount_amount = Column(DECIMAL(15, 2), nullable=False, default=0, comment="할인 금액")
+    final_price = Column(DECIMAL(15, 2), nullable=False, comment="최종 결제 금액")
+    shipping_address = Column(String(500), nullable=False, comment="배송 주소")
     status = Column(
         Enum(OrderStatus),
         nullable=False,
-        default=OrderStatus.CREATED,
+        default=OrderStatus.PENDING,
         index=True,
         comment="주문 상태"
     )
@@ -72,7 +75,7 @@ class OrderItem(Base):
         comment="도서 ID"
     )
     quantity = Column(Integer, nullable=False, comment="수량")
-    price_at_purchase = Column(DECIMAL(15, 2), nullable=False, comment="구매 당시 도서 가격")
+    price = Column(DECIMAL(15, 2), nullable=False, comment="구매 당시 도서 가격")
 
     # Relationships
     order = relationship("Order", back_populates="items")
