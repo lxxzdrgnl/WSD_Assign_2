@@ -25,8 +25,12 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Copy the application code
 COPY . /app
 
+# Copy and set permissions for entrypoint script
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
 # Expose the port the app runs on
 EXPOSE 8080
 
-# Command to run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+# Use the entrypoint script
+ENTRYPOINT ["/docker-entrypoint.sh"]

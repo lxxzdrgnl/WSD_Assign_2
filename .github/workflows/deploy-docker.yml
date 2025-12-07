@@ -19,8 +19,14 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             cd ${{ secrets.PROJECT_PATH }}
-            git pull origin main
-            docker-compose down || true
-            docker-compose up -d --build
-            docker image prune -f
+            git fetch origin
+            git reset --hard origin/main
+            echo "Current commit:"
+            git log -1 --oneline
+            echo "Checking Dockerfile:"
+            grep -n "mysql-client" Dockerfile || echo "No mysql-client found - OK"
+            sudo docker-compose down || true
+            sudo docker-compose build --no-cache
+            sudo docker-compose up -d
+            sudo docker image prune -f
             echo "Deployment completed successfully!"
