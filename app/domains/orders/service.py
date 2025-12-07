@@ -68,9 +68,9 @@ class OrderService:
                 raise BadRequestException("COUPON_INACTIVE", "Coupon is not active")
 
             now = datetime.utcnow()
-            if coupon.valid_from and now < coupon.valid_from:
+            if coupon.start_at and now < coupon.start_at:
                 raise BadRequestException("COUPON_NOT_YET_VALID", "Coupon is not yet valid")
-            if coupon.valid_until and now > coupon.valid_until:
+            if coupon.end_at and now > coupon.end_at:
                 raise BadRequestException("COUPON_EXPIRED", "Coupon has expired")
 
             # 사용자 쿠폰 확인
@@ -83,22 +83,10 @@ class OrderService:
             if not user_coupon:
                 raise BadRequestException("COUPON_NOT_AVAILABLE", "Coupon is not available for this user")
 
-            # 할인 금액 계산
-            if coupon.discount_type == "PERCENTAGE":
-                discount_amount = int(total_price * coupon.discount_value / 100)
-                if coupon.max_discount_amount and discount_amount > coupon.max_discount_amount:
-                    discount_amount = coupon.max_discount_amount
-            else:  # FIXED
-                discount_amount = coupon.discount_value
+            # 할인 금액 계산 (discount_rate는 백분율)
+            discount_amount = int(total_price * float(coupon.discount_rate) / 100)
 
-            # 최소 주문 금액 확인
-            if coupon.min_order_amount and total_price < coupon.min_order_amount:
-                raise BadRequestException(
-                    "MIN_ORDER_AMOUNT_NOT_MET",
-                    f"Minimum order amount is {coupon.min_order_amount}"
-                )
-
-            coupon_code = coupon.code
+            coupon_code = coupon.name
 
         final_price = total_price - discount_amount
         if final_price < 0:
@@ -195,7 +183,7 @@ class OrderService:
             ).first()
             if user_coupon:
                 coupon = db.query(Coupon).filter(Coupon.id == user_coupon.coupon_id).first()
-                order.coupon_code = coupon.code if coupon else None
+                order.coupon_code = coupon.name if coupon else None
             else:
                 order.coupon_code = None
 
@@ -233,7 +221,7 @@ class OrderService:
         user_coupon = db.query(UserCoupon).filter(UserCoupon.order_id == order.id).first()
         if user_coupon:
             coupon = db.query(Coupon).filter(Coupon.id == user_coupon.coupon_id).first()
-            order.coupon_code = coupon.code if coupon else None
+            order.coupon_code = coupon.name if coupon else None
         else:
             order.coupon_code = None
 
