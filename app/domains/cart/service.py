@@ -96,7 +96,7 @@ class CartService:
                 item.book_title = book.title
                 item.book_author = book.author
                 item.book_price = book.price
-                item.book_thumbnail = book.thumbnail_url
+                item.book_thumbnail = None  # Book 모델에 thumbnail_url 필드 없음
                 item.subtotal = book.price * item.quantity
 
                 total_quantity += item.quantity

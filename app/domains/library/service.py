@@ -78,7 +78,7 @@ class LibraryService:
                 "title": book.title,
                 "author": book.author,
                 "publisher": book.publisher,
-                "thumbnail_url": book.thumbnail_url,
+                "thumbnail_url": None,  # Book 모델에 thumbnail_url 필드 없음
                 "purchased_at": order.created_at,
                 "order_id": order.id
             })

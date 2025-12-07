@@ -42,7 +42,7 @@ def add_to_cart(
         cart_item.book_title = book.title
         cart_item.book_author = book.author
         cart_item.book_price = book.price
-        cart_item.book_thumbnail = book.thumbnail_url
+        cart_item.book_thumbnail = None  # Book 모델에 thumbnail_url 필드 없음
         cart_item.subtotal = book.price * cart_item.quantity
 
     return BaseResponse(
@@ -105,7 +105,7 @@ def update_quantity(
         cart_item.book_title = book.title
         cart_item.book_author = book.author
         cart_item.book_price = book.price
-        cart_item.book_thumbnail = book.thumbnail_url
+        cart_item.book_thumbnail = None  # Book 모델에 thumbnail_url 필드 없음
         cart_item.subtotal = book.price * cart_item.quantity
 
     return BaseResponse(

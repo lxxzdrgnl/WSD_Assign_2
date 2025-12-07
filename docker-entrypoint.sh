@@ -39,11 +39,60 @@ EOF
 
         echo "Running migrations from scratch..."
         alembic upgrade head
+
+        echo "Loading seed data..."
+        python3 scripts/seed_data.py 2>&1 || echo "Seed data failed, continuing..."
     else
         # If it's a different error, try to downgrade and upgrade
         echo "Attempting to reset migrations..."
         alembic downgrade base 2>/dev/null || true
         alembic upgrade head
+
+        echo "Loading seed data..."
+        python3 scripts/seed_data.py 2>&1 || echo "Seed data failed, continuing..."
+    fi
+else
+    echo "Migrations completed successfully."
+
+    # Check if seed data already exists
+    echo "Checking if seed data needs to be loaded..."
+    set +e  # Temporarily disable exit on error
+    python3 << EOF
+import pymysql
+import os
+
+try:
+    conn = pymysql.connect(
+        host='db',
+        user=os.environ['DB_USER'],
+        password=os.environ['DB_PASSWORD'],
+        database=os.environ['DB_NAME']
+    )
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT COUNT(*) FROM users")
+        count = cursor.fetchone()[0]
+        if count == 0:
+            print("No users found, will load seed data")
+            exit(1)
+        else:
+            print(f"Found {count} users, skipping seed data")
+            exit(0)
+    conn.close()
+except Exception as e:
+    print(f"Error checking users: {e}, will load seed data")
+    exit(1)
+EOF
+    NEED_SEED=$?
+    set -e  # Re-enable exit on error
+
+    if [ $NEED_SEED -ne 0 ]; then
+        echo "Loading seed data..."
+        if python3 scripts/seed_data.py 2>&1; then
+            echo "Seed data loaded successfully"
+        else
+            echo "Failed to load seed data, error code: $?"
+            echo "Continuing anyway..."
+        fi
     fi
 fi
 

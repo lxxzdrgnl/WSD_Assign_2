@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
 from typing import Optional
+import math
 
 from app.core.database import get_db
 from app.domains.coupons import schemas, service

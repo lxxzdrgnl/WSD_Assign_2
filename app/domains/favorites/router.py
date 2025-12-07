@@ -43,7 +43,7 @@ def add_favorite(
         favorite.book_title = book.title
         favorite.book_author = book.author
         favorite.book_price = book.price
-        favorite.book_thumbnail = book.thumbnail_url
+        favorite.book_thumbnail = None  # Book 모델에 thumbnail_url 필드 없음
 
     return BaseResponse(
         is_success=True,

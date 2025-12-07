@@ -129,7 +129,7 @@ class FavoriteService:
                 favorite.book_title = favorite.book.title
                 favorite.book_author = favorite.book.author
                 favorite.book_price = favorite.book.price
-                favorite.book_thumbnail = favorite.book.thumbnail_url
+                favorite.book_thumbnail = None  # Book 모델에 thumbnail_url 필드 없음
 
         return favorites, total
 
