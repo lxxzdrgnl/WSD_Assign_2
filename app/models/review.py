@@ -37,7 +37,7 @@ class Review(Base):
         index=True,
         comment="실제 구매한 주문 ID"
     )
-    comment = Column(Text, nullable=False, comment="리뷰 내용")
+    comment = Column(Text, nullable=True, comment="리뷰 내용")
     rating = Column(Integer, nullable=False, comment="평점 (1~5)")
     created_at = Column(DateTime, nullable=False, server_default=func.now(), comment="작성일")
     updated_at = Column(
@@ -48,12 +48,22 @@ class Review(Base):
         comment="수정일"
     )
 
+    @property
+    def content(self):
+        """스키마 호환성을 위한 content 속성"""
+        return self.comment
+
+    @content.setter
+    def content(self, value):
+        """스키마 호환성을 위한 content setter"""
+        self.comment = value
+
     # Relationships
     user = relationship("User", back_populates="reviews")
     book = relationship("Book", back_populates="reviews")
     order = relationship("Order", back_populates="reviews")
     likes = relationship("ReviewLike", back_populates="review", cascade="all, delete-orphan")
-    like_count = relationship("ReviewLikeCount", back_populates="review", uselist=False, cascade="all, delete-orphan")
+    like_count_cache = relationship("ReviewLikeCount", back_populates="review", uselist=False, cascade="all, delete-orphan")
     comments = relationship("Comment", back_populates="review", cascade="all, delete-orphan")
 
 
@@ -106,4 +116,4 @@ class ReviewLikeCount(Base):
     )
 
     # Relationships
-    review = relationship("Review", back_populates="like_count")
+    review = relationship("Review", back_populates="like_count_cache")

@@ -54,7 +54,7 @@ class CommentService:
         comment = Comment(
             review_id=data.review_id,
             user_id=user_id,
-            parent_id=data.parent_id,
+            parent_comment_id=data.parent_id,
             content=data.content
         )
 

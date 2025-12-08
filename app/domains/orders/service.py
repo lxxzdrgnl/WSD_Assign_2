@@ -84,7 +84,7 @@ class OrderService:
                 raise BadRequestException("COUPON_NOT_AVAILABLE", "Coupon is not available for this user")
 
             # 할인 금액 계산 (discount_rate는 백분율)
-            discount_amount = int(total_price * float(coupon.discount_rate) / 100)
+            discount_amount = int(float(total_price) * float(coupon.discount_rate) / 100)
 
             coupon_code = coupon.name
 

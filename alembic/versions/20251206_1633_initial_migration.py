@@ -72,9 +72,9 @@ def upgrade() -> None:
     sa.Column('discount_amount', sa.DECIMAL(precision=15, scale=2), nullable=False, server_default='0', comment='할인 금액'),
     sa.Column('final_price', sa.DECIMAL(precision=15, scale=2), nullable=False, comment='최종 결제 금액'),
     sa.Column('shipping_address', sa.String(length=500), nullable=False, comment='배송 주소'),
-    sa.Column('status', sa.Enum('PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED', name='orderstatus'), nullable=False, comment='주문 상태'),
+    sa.Column('status', sa.Enum('PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED', name='orderstatus'), nullable=False, server_default='PENDING', comment='주문 상태'),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False, comment='주문 생성일'),
-    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False, comment='주문 수정일'),
+    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), server_onupdate=sa.text('now()'), nullable=False, comment='주문 수정일'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -161,7 +161,7 @@ def upgrade() -> None:
     sa.Column('user_id', sa.Integer(), nullable=False, comment='작성자 ID'),
     sa.Column('book_id', sa.Integer(), nullable=False, comment='리뷰 대상 도서'),
     sa.Column('order_id', sa.Integer(), nullable=False, comment='실제 구매한 주문 ID'),
-    sa.Column('comment', sa.Text(), nullable=False, comment='리뷰 내용'),
+    sa.Column('comment', sa.Text(), nullable=True, comment='리뷰 내용'),
     sa.Column('rating', sa.Integer(), nullable=False, comment='평점 (1~5)'),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False, comment='작성일'),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False, comment='수정일'),

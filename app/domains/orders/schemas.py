@@ -41,7 +41,7 @@ class OrderItemResponse(BaseModel):
     book_title: str = Field(..., description="도서 제목")
     book_author: str = Field(..., description="저자")
     quantity: int = Field(..., description="수량")
-    price: int = Field(..., description="단가")
+    price_at_purchase: int = Field(..., description="구매 당시 단가")
     subtotal: int = Field(..., description="소계")
 
     model_config = {
@@ -53,7 +53,7 @@ class OrderItemResponse(BaseModel):
                 "book_title": "채식주의자",
                 "book_author": "한강",
                 "quantity": 2,
-                "price": 10800,
+                "price_at_purchase": 10800,
                 "subtotal": 21600
             }
         }

@@ -18,7 +18,7 @@ class ReviewService:
     """리뷰 서비스"""
 
     @staticmethod
-    def verify_purchase(db: Session, user_id: int, book_id: int) -> bool:
+    def verify_purchase(db: Session, user_id: int, book_id: int) -> Optional[int]:
         """
         도서 구매 검증
 
@@ -28,16 +28,16 @@ class ReviewService:
             book_id: 도서 ID
 
         Returns:
-            bool: 구매 여부
+            Optional[int]: 구매한 주문 ID, 구매하지 않았으면 None
         """
         # DELIVERED 상태인 주문에서 해당 도서를 포함하는지 확인
-        purchased = db.query(OrderItem).join(Order).filter(
+        purchased = db.query(Order).join(OrderItem).filter(
             Order.user_id == user_id,
             OrderItem.book_id == book_id,
             Order.status == OrderStatus.DELIVERED
         ).first()
 
-        return purchased is not None
+        return purchased.id if purchased else None
 
     @staticmethod
     def create_review(db: Session, user_id: int, data: ReviewCreateRequest) -> Review:
@@ -62,7 +62,8 @@ class ReviewService:
             raise NotFoundException("BOOK_NOT_FOUND", "Book not found")
 
         # 구매 검증
-        if not ReviewService.verify_purchase(db, user_id, data.book_id):
+        order_id = ReviewService.verify_purchase(db, user_id, data.book_id)
+        if not order_id:
             raise ForbiddenException(
                 "REVIEW_REQUIRES_PURCHASE",
                 "You can only review books you have purchased and received"
@@ -72,8 +73,9 @@ class ReviewService:
         review = Review(
             book_id=data.book_id,
             user_id=user_id,
+            order_id=order_id,
             rating=data.rating,
-            content=data.content
+            comment=data.content
         )
 
         try:
@@ -247,6 +249,10 @@ class ReviewService:
         update_data = data.model_dump(exclude_unset=True)
         if not update_data:
             raise BadRequestException("NO_FIELDS_TO_UPDATE", "No fields to update")
+
+        # content -> comment 필드 매핑
+        if 'content' in update_data:
+            update_data['comment'] = update_data.pop('content')
 
         for field, value in update_data.items():
             setattr(review, field, value)

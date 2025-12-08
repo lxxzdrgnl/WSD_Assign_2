@@ -11,7 +11,7 @@ class ReviewCreateRequest(BaseModel):
     """리뷰 작성 요청"""
     book_id: int = Field(..., gt=0, description="도서 ID")
     rating: int = Field(..., ge=1, le=5, description="평점 (1-5)")
-    content: str = Field(..., min_length=10, max_length=2000, description="리뷰 내용 (10-2000자)")
+    content: Optional[str] = Field(None, min_length=10, max_length=2000, description="리뷰 내용 (10-2000자)")
 
     model_config = {
         "json_schema_extra": {
@@ -46,7 +46,7 @@ class ReviewResponse(BaseModel):
     user_id: int = Field(..., description="작성자 ID")
     user_name: str = Field(..., description="작성자 이름")
     rating: int = Field(..., description="평점")
-    content: str = Field(..., description="리뷰 내용")
+    content: Optional[str] = Field(None, description="리뷰 내용", alias="content")
     like_count: int = Field(0, description="좋아요 수")
     is_liked: bool = Field(False, description="현재 사용자의 좋아요 여부")
     created_at: datetime = Field(..., description="작성일")
@@ -54,6 +54,8 @@ class ReviewResponse(BaseModel):
 
     model_config = {
         "from_attributes": True,
+        "populate_by_name": True,
+        "populate_by_alias": True,
         "json_schema_extra": {
             "example": {
                 "id": 1,
