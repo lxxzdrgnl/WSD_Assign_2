@@ -41,7 +41,7 @@ class Book(Base):
     reviews = relationship("Review", back_populates="book", cascade="all, delete-orphan")
     favorites = relationship("Favorite", back_populates="book", cascade="all, delete-orphan")
     carts = relationship("Cart", back_populates="book", cascade="all, delete-orphan")
-    order_items = relationship("OrderItem", back_populates="book")
+    order_items = relationship("OrderItem", back_populates="book", cascade="all, delete-orphan")
     books_view = relationship("BookView", back_populates="book", cascade="all, delete-orphan")
 
 

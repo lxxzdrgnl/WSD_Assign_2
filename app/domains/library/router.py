@@ -47,10 +47,10 @@ def get_library(
     )
 
     # 응답 데이터 구성
-    book_list = [schemas.LibraryBookResponse(**book) for book in books]
+    book_list = [LibraryBookResponse(**book) for book in books]
     total_pages = math.ceil(total / size) if total > 0 else 0
 
-    payload_data = schemas.LibraryListResponse(
+    payload_data = LibraryListResponse(
         content=book_list,
         page=page,
         size=size,
@@ -62,5 +62,5 @@ def get_library(
     return BaseResponse(
         is_success=True,
         message="구매한 도서 목록이 성공적으로 조회되었습니다.",
-        payload=schemas.LibraryListResponse(**payload_data)
+        payload=LibraryListResponse(**payload_data)
     )

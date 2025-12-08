@@ -112,7 +112,7 @@ class OrderService:
                     order_id=order.id,
                     book_id=item_data["book_id"],
                     quantity=item_data["quantity"],
-                    price=item_data["price"]
+                    price_at_purchase=item_data["price"]
                 )
                 db.add(order_item)
 
@@ -232,7 +232,7 @@ class OrderService:
             if book:
                 item.book_title = book.title
                 item.book_author = book.author
-            item.subtotal = item.price * item.quantity
+            item.subtotal = item.price_at_purchase * item.quantity
 
         order.items = order_items
 

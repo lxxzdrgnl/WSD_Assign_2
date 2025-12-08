@@ -7,7 +7,7 @@ from sqlalchemy import desc, func
 from sqlalchemy.exc import IntegrityError
 from app.models.comment import Comment, CommentLike
 from app.models.review import Review
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.domains.comments.schemas import CommentCreateRequest, CommentUpdateRequest
 from app.core.exceptions import NotFoundException, BadRequestException, ForbiddenException
 from typing import Optional
@@ -214,25 +214,25 @@ class CommentService:
         return comment
 
     @staticmethod
-    def delete_comment(db: Session, comment_id: int, user_id: int) -> None:
+    def delete_comment(db: Session, comment_id: int, current_user: User) -> None:
         """
-        댓글 삭제 (본인만 가능)
+        댓글 삭제 (본인 또는 관리자 가능)
 
         Args:
             db: 데이터베이스 세션
             comment_id: 댓글 ID
-            user_id: 사용자 ID
+            current_user: 현재 사용자 객체
 
         Raises:
             NotFoundException: 댓글을 찾을 수 없음
-            ForbiddenException: 본인의 댓글이 아님
+            ForbiddenException: 본인의 댓글이 아니고 관리자도 아님
         """
         comment = db.query(Comment).filter(Comment.id == comment_id).first()
         if not comment:
             raise NotFoundException("COMMENT_NOT_FOUND", "Comment not found")
 
-        # 권한 확인
-        if comment.user_id != user_id:
+        # 권한 확인 (본인 또는 관리자)
+        if comment.user_id != current_user.id and current_user.role != UserRole.ADMIN:
             raise ForbiddenException("FORBIDDEN", "You can only delete your own comments")
 
         # CASCADE로 관련 데이터 자동 삭제 (comment_likes, 자식 댓글)

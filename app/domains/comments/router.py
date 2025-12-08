@@ -144,15 +144,15 @@ def update_comment(
     "/{comment_id}",
     response_model=SuccessResponse,
     summary="댓글 삭제",
-    description="본인이 작성한 댓글을 삭제합니다."
+    description="본인이 작성한 댓글을 삭제합니다. 관리자는 모든 댓글을 삭제할 수 있습니다."
 )
 def delete_comment(
     comment_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """댓글 삭제 (본인만 가능)"""
-    CommentService.delete_comment(db, comment_id, current_user.id)
+    """댓글 삭제 (본인 또는 관리자 가능)"""
+    CommentService.delete_comment(db, comment_id, current_user)
 
     return SuccessResponse(
         message="댓글이 성공적으로 삭제되었습니다."

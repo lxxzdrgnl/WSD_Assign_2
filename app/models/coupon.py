@@ -53,6 +53,7 @@ class UserCoupon(Base):
     )
     is_used = Column(Boolean, nullable=False, default=False, comment="사용 여부")
     used_at = Column(DateTime, nullable=True, comment="사용 일시")
+    order_id = Column(Integer, ForeignKey("orders.id", ondelete="SET NULL"), nullable=True, comment="사용된 주문 ID")
     assigned_at = Column(DateTime, nullable=False, server_default=func.now(), comment="발급 일시")
 
     # Relationships

@@ -60,8 +60,6 @@ def get_reviews(
     book_id: Optional[int] = Query(None, description="도서 ID 필터"),
     user_id: Optional[int] = Query(None, description="작성자 ID 필터"),
     min_rating: Optional[int] = Query(None, ge=1, le=5, description="최소 평점 필터"),
-    sort: str = Query("created_at", description="정렬 기준 (created_at, rating, like_count)"),
-    order: str = Query("desc", description="정렬 순서 (asc, desc)"),
     page: int = Query(1, ge=1, description="페이지 번호"),
     size: int = Query(10, ge=1, le=100, description="페이지 크기"),
     db: Session = Depends(get_db),

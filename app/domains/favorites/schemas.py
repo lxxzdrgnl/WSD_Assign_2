@@ -5,6 +5,7 @@ Favorites Schemas
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
+from decimal import Decimal
 
 
 class FavoriteAddRequest(BaseModel):
@@ -27,7 +28,7 @@ class FavoriteResponse(BaseModel):
     book_id: int = Field(..., description="도서 ID")
     book_title: str = Field(..., description="도서 제목")
     book_author: str = Field(..., description="저자")
-    book_price: int = Field(..., description="가격")
+    book_price: Decimal = Field(..., description="가격")
     book_thumbnail: Optional[str] = Field(None, description="썸네일 URL")
     created_at: datetime = Field(..., description="추가일")
 

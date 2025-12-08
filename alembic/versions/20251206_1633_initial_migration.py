@@ -97,8 +97,10 @@ def upgrade() -> None:
     sa.Column('coupon_id', sa.Integer(), nullable=False, comment='쿠폰 ID'),
     sa.Column('is_used', sa.Boolean(), nullable=False, comment='사용 여부'),
     sa.Column('used_at', sa.DateTime(), nullable=True, comment='사용 일시'),
+    sa.Column('order_id', sa.Integer(), nullable=True, comment='사용된 주문 ID'),
     sa.Column('assigned_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False, comment='발급 일시'),
     sa.ForeignKeyConstraint(['coupon_id'], ['coupons.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['order_id'], ['orders.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -148,7 +150,7 @@ def upgrade() -> None:
     sa.Column('order_id', sa.Integer(), nullable=False, comment='주문 ID'),
     sa.Column('book_id', sa.Integer(), nullable=True, comment='도서 ID'),
     sa.Column('quantity', sa.Integer(), nullable=False, comment='수량'),
-    sa.Column('price', sa.DECIMAL(precision=15, scale=2), nullable=False, comment='구매 당시 도서 가격'),
+    sa.Column('price_at_purchase', sa.DECIMAL(precision=15, scale=2), nullable=False, comment='구매 당시 도서 가격'),
     sa.ForeignKeyConstraint(['book_id'], ['books.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['order_id'], ['orders.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')

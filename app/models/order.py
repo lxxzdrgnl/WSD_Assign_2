@@ -75,7 +75,7 @@ class OrderItem(Base):
         comment="도서 ID"
     )
     quantity = Column(Integer, nullable=False, comment="수량")
-    price = Column(DECIMAL(15, 2), nullable=False, comment="구매 당시 도서 가격")
+    price_at_purchase = Column(DECIMAL(15, 2), nullable=False, comment="구매 당시 도서 가격")
 
     # Relationships
     order = relationship("Order", back_populates="items")

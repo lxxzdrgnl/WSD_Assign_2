@@ -5,6 +5,7 @@ Cart Schemas
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
+from decimal import Decimal
 
 
 class CartAddRequest(BaseModel):
@@ -42,10 +43,10 @@ class CartItemResponse(BaseModel):
     book_id: int = Field(..., description="도서 ID")
     book_title: str = Field(..., description="도서 제목")
     book_author: str = Field(..., description="저자")
-    book_price: int = Field(..., description="가격")
+    book_price: Decimal = Field(..., description="가격")
     book_thumbnail: Optional[str] = Field(None, description="썸네일 URL")
     quantity: int = Field(..., description="수량")
-    subtotal: int = Field(..., description="소계 (가격 * 수량)")
+    subtotal: Decimal = Field(..., description="소계 (가격 * 수량)")
     created_at: datetime = Field(..., description="추가일")
 
     model_config = {
@@ -72,7 +73,7 @@ class CartListResponse(BaseModel):
     items: list[CartItemResponse] = Field(..., description="장바구니 항목 목록")
     total_items: int = Field(..., description="총 항목 수")
     total_quantity: int = Field(..., description="총 수량")
-    total_price: int = Field(..., description="총 금액")
+    total_price: Decimal = Field(..., description="총 금액")
 
     model_config = {
         "json_schema_extra": {

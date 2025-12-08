@@ -275,6 +275,9 @@ def create_orders(db: Session, customers: list[User], books: list[Book]):
             user_id=customer.id,
             status=status,
             total_price=Decimal(str(total)),
+            discount_amount=Decimal('0'),
+            final_price=Decimal(str(total)),
+            shipping_address=f"서울시 {random.choice(['강남구', '서초구', '송파구', '마포구', '용산구'])} {random.randint(1, 500)}",
             created_at=datetime.utcnow() - timedelta(days=random.randint(0, 90))
         )
         db.add(order)
