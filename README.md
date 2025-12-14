@@ -1,4 +1,4 @@
-# Bookstore API
+# Bookstore API (FastAPI 사용)
 
 온라인 도서 구매 시스템 RESTful API
 
@@ -32,6 +32,7 @@
 - **Swagger Docs**: http://113.198.66.68:10040/docs#/
 - **ReDoc**: http://113.198.66.68:10040/redoc
 - **Health Check**: http://113.198.66.68:10040/health
+![Health Check API 응답](./@HealthCheck.png)
 
 ### SSH 접속
 ```bash
@@ -101,6 +102,24 @@ uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 - **Swagger Docs**: http://localhost:8080/docs
 - **ReDoc**: http://localhost:8080/redoc
 - **Health Check**: http://localhost:8080/health
+
+---
+
+### Postman을 이용한 API 테스트
+
+`postman` 디렉토리에 포함된 `Bookstore API.postman_collection.json` 파일을 사용하여 API를 테스트할 수 있습니다.
+
+**테스트 절차:**
+1.  **Postman 설정**:
+    *   `postman` 디렉토리의 `Bookstore API.postman_collection.json` 파일을 Postman으로 불러옵니다.
+    *   Postman에서 **새로운 빈 환경(New Empty Environment)을 하나 만듭니다.** 그리고 이 환경을 활성(active) 환경으로 선택합니다.
+2.  **로그인 요청 실행**:
+    *   Collection의 `Auth` > `login` > `Login` 요청을 실행합니다.
+    *   요청에 포함된 테스트 스크립트가 성공 시, 여러분이 만든 **Postman 환경 변수**에 `bearerToken`과 `refresh_token`을 자동으로 저장합니다.
+3.  **API 폴더 테스트 실행**:
+    *   로그인이 완료되면, Collection의 `api` 폴더를 클릭하여 `Scripts` 탭의 `Post-response` 스크립트로 테스트 가능합니다.
+4.  **다른 API 요청**:
+    *   로그인 정보가 Postman 환경 변수에 기억되어 있으므로, 다른 모든 Postman 요청을 보내어 API를 편리하게 테스트할 수 있습니다.
 
 ---
 
