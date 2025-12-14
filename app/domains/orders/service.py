@@ -7,7 +7,7 @@ from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 from app.models.order import Order, OrderItem, OrderStatus
 from app.models.book import Book
-from app.models.coupon import Coupon, UserCoupon
+from app.models.coupon import Coupon, UserCoupon, CouponIssuance, CouponUsageHistory, CouponType
 from app.domains.orders.schemas import OrderCreateRequest
 from app.core.exceptions import NotFoundException, BadRequestException, ForbiddenException
 from datetime import datetime
@@ -73,15 +73,27 @@ class OrderService:
             if coupon.end_at and now > coupon.end_at:
                 raise BadRequestException("COUPON_EXPIRED", "Coupon has expired")
 
-            # 사용자 쿠폰 확인
-            user_coupon = db.query(UserCoupon).filter(
-                UserCoupon.user_id == user_id,
-                UserCoupon.coupon_id == data.coupon_id,
-                UserCoupon.used_at.is_(None)
-            ).first()
+            # 쿠폰 타입에 따라 발급 여부 확인
+            if coupon.coupon_type == CouponType.PERSONAL:
+                # PERSONAL 쿠폰: 발급받았는지 확인
+                issuance = db.query(CouponIssuance).filter(
+                    CouponIssuance.user_id == user_id,
+                    CouponIssuance.coupon_id == data.coupon_id
+                ).first()
+                if not issuance:
+                    raise BadRequestException(
+                        "COUPON_NOT_ISSUED",
+                        "This coupon has not been issued to you"
+                    )
+            # UNIVERSAL 쿠폰: 모두 사용 가능 (발급 확인 불필요)
 
-            if not user_coupon:
-                raise BadRequestException("COUPON_NOT_AVAILABLE", "Coupon is not available for this user")
+            # 이미 사용했는지 확인
+            usage = db.query(CouponUsageHistory).filter(
+                CouponUsageHistory.user_id == user_id,
+                CouponUsageHistory.coupon_id == data.coupon_id
+            ).first()
+            if usage:
+                raise BadRequestException("COUPON_ALREADY_USED", "Coupon has already been used")
 
             # 할인 금액 계산 (discount_rate는 백분율)
             discount_amount = int(float(total_price) * float(coupon.discount_rate) / 100)
@@ -116,15 +128,23 @@ class OrderService:
                 )
                 db.add(order_item)
 
-            # 쿠폰 사용 처리
-            if data.coupon_id:
-                user_coupon.used_at = datetime.utcnow()
-                user_coupon.order_id = order.id
-
             db.commit()
             db.refresh(order)
 
+            # 주문 생성 성공 후 쿠폰 사용 처리
+            if data.coupon_id:
+                usage_history = CouponUsageHistory(
+                    user_id=user_id,
+                    coupon_id=data.coupon_id,
+                    order_id=order.id
+                )
+                db.add(usage_history)
+                db.commit()
+
         except IntegrityError as e:
+            db.rollback()
+            raise BadRequestException("ORDER_CREATE_FAILED", f"Failed to create order: {str(e)}")
+        except Exception as e:
             db.rollback()
             raise BadRequestException("ORDER_CREATE_FAILED", f"Failed to create order: {str(e)}")
 
@@ -274,11 +294,10 @@ class OrderService:
         # 주문 취소
         order.status = OrderStatus.CANCELLED
 
-        # 쿠폰 복구 (사용 취소)
-        user_coupon = db.query(UserCoupon).filter(UserCoupon.order_id == order.id).first()
-        if user_coupon:
-            user_coupon.used_at = None
-            user_coupon.order_id = None
+        # 쿠폰 복구 (사용 이력 삭제)
+        usage = db.query(CouponUsageHistory).filter(CouponUsageHistory.order_id == order.id).first()
+        if usage:
+            db.delete(usage)
 
         try:
             db.commit()

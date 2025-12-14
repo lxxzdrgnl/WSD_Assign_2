@@ -57,6 +57,8 @@ class User(Base):
     carts = relationship("Cart", back_populates="user", cascade="all, delete-orphan")
     orders = relationship("Order", back_populates="user")
     user_coupons = relationship("UserCoupon", back_populates="user", cascade="all, delete-orphan")
+    coupon_issuances = relationship("CouponIssuance", back_populates="user", cascade="all, delete-orphan")
+    coupon_usages = relationship("CouponUsageHistory", back_populates="user", cascade="all, delete-orphan")
     review_likes = relationship("ReviewLike", back_populates="user", cascade="all, delete-orphan")
     comment_likes = relationship("CommentLike", back_populates="user", cascade="all, delete-orphan")
     books_view = relationship("BookView", back_populates="user", cascade="all, delete-orphan")

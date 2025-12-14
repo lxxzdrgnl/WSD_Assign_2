@@ -22,7 +22,7 @@ def signup(db: Session, request: schemas.SignupRequest) -> schemas.SignupRespons
     existing_user = db.query(User).filter(User.email == request.email).first()
     if existing_user:
         raise EmailAlreadyExistsException(message=f"Email {request.email} already exists")
-    
+
     hashed_password = hash_password(request.password)
     new_user = User(
         email=request.email, password=hashed_password, name=request.name,
@@ -32,6 +32,7 @@ def signup(db: Session, request: schemas.SignupRequest) -> schemas.SignupRespons
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+
     return schemas.SignupResponse(user_id=new_user.id, created_at=new_user.created_at)
 
 

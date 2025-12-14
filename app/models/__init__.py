@@ -6,7 +6,7 @@ from app.models.comment import Comment, CommentLike
 from app.models.cart import Cart
 from app.models.favorite import Favorite
 from app.models.order import Order, OrderItem, OrderStatus
-from app.models.coupon import Coupon, UserCoupon
+from app.models.coupon import Coupon, UserCoupon, CouponIssuance, CouponUsageHistory, CouponType
 
 __all__ = [
     "User", "RefreshToken", "UserRole", "Gender",
@@ -15,5 +15,5 @@ __all__ = [
     "Comment", "CommentLike",
     "Cart", "Favorite",
     "Order", "OrderItem", "OrderStatus",
-    "Coupon", "UserCoupon",
+    "Coupon", "UserCoupon", "CouponIssuance", "CouponUsageHistory", "CouponType",
 ]

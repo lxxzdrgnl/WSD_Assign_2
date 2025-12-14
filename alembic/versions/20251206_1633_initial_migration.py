@@ -25,6 +25,7 @@ def upgrade() -> None:
     sa.Column('name', sa.String(length=100), nullable=False, comment='쿠폰명'),
     sa.Column('description', sa.String(length=255), nullable=True, comment='쿠폰 설명'),
     sa.Column('discount_rate', sa.DECIMAL(precision=5, scale=2), nullable=False, comment='할인율 (%)'),
+    sa.Column('coupon_type', sa.Enum('UNIVERSAL', 'PERSONAL', name='coupontype'), nullable=False, server_default='PERSONAL', comment='쿠폰 타입 (UNIVERSAL: 전체, PERSONAL: 개인)'),
     sa.Column('start_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False, comment='시작 일시'),
     sa.Column('end_at', sa.DateTime(), nullable=False, comment='종료 일시'),
     sa.Column('is_active', sa.Boolean(), nullable=False, comment='활성화 여부'),
@@ -106,6 +107,32 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_user_coupons_coupon_id'), 'user_coupons', ['coupon_id'], unique=False)
     op.create_index(op.f('ix_user_coupons_user_id'), 'user_coupons', ['user_id'], unique=False)
+    op.create_table('coupon_issuances',
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False, comment='발급 ID'),
+    sa.Column('user_id', sa.Integer(), nullable=False, comment='사용자 ID'),
+    sa.Column('coupon_id', sa.Integer(), nullable=False, comment='쿠폰 ID'),
+    sa.Column('issued_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False, comment='발급 일시'),
+    sa.ForeignKeyConstraint(['coupon_id'], ['coupons.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('user_id', 'coupon_id', name='unique_user_coupon_issuance')
+    )
+    op.create_index(op.f('ix_coupon_issuances_coupon_id'), 'coupon_issuances', ['coupon_id'], unique=False)
+    op.create_index(op.f('ix_coupon_issuances_user_id'), 'coupon_issuances', ['user_id'], unique=False)
+    op.create_table('coupon_usage_history',
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False, comment='사용 ID'),
+    sa.Column('user_id', sa.Integer(), nullable=False, comment='사용자 ID'),
+    sa.Column('coupon_id', sa.Integer(), nullable=False, comment='쿠폰 ID'),
+    sa.Column('order_id', sa.Integer(), nullable=True, comment='사용된 주문 ID'),
+    sa.Column('used_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False, comment='사용 일시'),
+    sa.ForeignKeyConstraint(['coupon_id'], ['coupons.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['order_id'], ['orders.id'], ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('user_id', 'coupon_id', name='unique_user_coupon_usage')
+    )
+    op.create_index(op.f('ix_coupon_usage_history_coupon_id'), 'coupon_usage_history', ['coupon_id'], unique=False)
+    op.create_index(op.f('ix_coupon_usage_history_user_id'), 'coupon_usage_history', ['user_id'], unique=False)
     op.create_table('books_view',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False, comment='조회 기록 ID'),
     sa.Column('user_id', sa.Integer(), nullable=True, comment='조회한 사용자 (비로그인 가능)'),
@@ -250,6 +277,12 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_books_view_user_id'), table_name='books_view')
     op.drop_index(op.f('ix_books_view_book_id'), table_name='books_view')
     op.drop_table('books_view')
+    op.drop_index(op.f('ix_coupon_usage_history_user_id'), table_name='coupon_usage_history')
+    op.drop_index(op.f('ix_coupon_usage_history_coupon_id'), table_name='coupon_usage_history')
+    op.drop_table('coupon_usage_history')
+    op.drop_index(op.f('ix_coupon_issuances_user_id'), table_name='coupon_issuances')
+    op.drop_index(op.f('ix_coupon_issuances_coupon_id'), table_name='coupon_issuances')
+    op.drop_table('coupon_issuances')
     op.drop_index(op.f('ix_user_coupons_user_id'), table_name='user_coupons')
     op.drop_index(op.f('ix_user_coupons_coupon_id'), table_name='user_coupons')
     op.drop_table('user_coupons')

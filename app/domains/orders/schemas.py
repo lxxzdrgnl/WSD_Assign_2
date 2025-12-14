@@ -5,6 +5,7 @@ Orders Schemas
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional, List
+from decimal import Decimal
 from app.models.order import OrderStatus
 
 
@@ -41,8 +42,8 @@ class OrderItemResponse(BaseModel):
     book_title: str = Field(..., description="도서 제목")
     book_author: str = Field(..., description="저자")
     quantity: int = Field(..., description="수량")
-    price_at_purchase: int = Field(..., description="구매 당시 단가")
-    subtotal: int = Field(..., description="소계")
+    price_at_purchase: Decimal = Field(..., description="구매 당시 단가")
+    subtotal: Decimal = Field(..., description="소계")
 
     model_config = {
         "from_attributes": True,
@@ -65,9 +66,9 @@ class OrderResponse(BaseModel):
     id: int = Field(..., description="주문 ID")
     user_id: int = Field(..., description="사용자 ID")
     status: OrderStatus = Field(..., description="주문 상태")
-    total_price: int = Field(..., description="총 금액")
-    discount_amount: int = Field(0, description="할인 금액")
-    final_price: int = Field(..., description="최종 금액")
+    total_price: Decimal = Field(..., description="총 금액")
+    discount_amount: Decimal = Field(0, description="할인 금액")
+    final_price: Decimal = Field(..., description="최종 금액")
     shipping_address: str = Field(..., description="배송지 주소")
     coupon_code: Optional[str] = Field(None, description="사용한 쿠폰 코드")
     items: List[OrderItemResponse] = Field([], description="주문 항목 목록")

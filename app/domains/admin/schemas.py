@@ -7,6 +7,7 @@ from datetime import datetime, date
 from typing import Optional, Literal
 from app.models.user import UserRole, Gender
 from app.models.order import OrderStatus
+from app.models.coupon import CouponType
 
 
 class AdminUserResponse(BaseModel):
@@ -115,16 +116,18 @@ class CouponCreateRequest(BaseModel):
     start_at: datetime = Field(..., description="유효 시작일")
     end_at: datetime = Field(..., description="유효 종료일")
     is_active: bool = Field(True, description="활성화 여부")
+    issue_to_all: bool = Field(False, description="모든 사용자에게 발급 여부")
 
     model_config = {
         "json_schema_extra": {
             "example": {
-                "name": "연말 감사 쿠폰",
-                "description": "2025년 연말 감사 15% 할인 쿠폰",
-                "discount_rate": 15.0,
-                "start_at": "2025-12-01T00:00:00",
-                "end_at": "2025-12-31T23:59:59",
-                "is_active": True
+                "name": "크리스마스 전체 할인",
+                "description": "모든 회원 대상 크리스마스 특별 할인 쿠폰",
+                "discount_rate": 20.0,
+                "start_at": "2025-12-25T00:00:00",
+                "end_at": "2025-12-25T23:59:59",
+                "is_active": True,
+                "issue_to_all": True
             }
         }
     }
@@ -136,6 +139,7 @@ class CouponResponse(BaseModel):
     name: str = Field(..., description="쿠폰 이름")
     description: Optional[str] = Field(None, description="쿠폰 설명")
     discount_rate: float = Field(..., description="할인율 (%)")
+    coupon_type: CouponType = Field(..., description="쿠폰 타입 (UNIVERSAL: 전체, PERSONAL: 개인)")
     start_at: datetime = Field(..., description="유효 시작일")
     end_at: datetime = Field(..., description="유효 종료일")
     is_active: bool = Field(..., description="활성화 여부")
@@ -146,13 +150,14 @@ class CouponResponse(BaseModel):
         "json_schema_extra": {
             "example": {
                 "id": 1,
-                "name": "신규회원10",
-                "description": "신규회원10 쿠폰 - 10% 할인",
-                "discount_rate": 10.0,
-                "start_at": "2025-12-06T12:00:00",
-                "end_at": "2026-12-06T12:00:00",
+                "name": "크리스마스 전체 할인",
+                "description": "모든 회원 대상 크리스마스 특별 할인 쿠폰",
+                "discount_rate": 20.0,
+                "coupon_type": "UNIVERSAL",
+                "start_at": "2025-12-25T00:00:00",
+                "end_at": "2025-12-25T23:59:59",
                 "is_active": True,
-                "created_at": "2025-12-06T12:00:00"
+                "created_at": "2025-12-14T12:00:00"
             }
         }
     }

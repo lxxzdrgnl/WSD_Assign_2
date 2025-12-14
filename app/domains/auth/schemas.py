@@ -50,15 +50,15 @@ class SignupResponse(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr = Field(example="seller1@bookstore.com")
-    password: str = Field(example="seller1123!")
+    email: EmailStr = Field(example="admin@bookstore.com")
+    password: str = Field(example="admin123!")
 
     model_config = {
         "json_schema_extra": {
             "examples": [
                 {
-                    "email": "seller1@bookstore.com",
-                    "password": "seller1123!"
+                    "email": "admin@bookstore.com",
+                    "password": "admin123!"
                 }
             ]
         }

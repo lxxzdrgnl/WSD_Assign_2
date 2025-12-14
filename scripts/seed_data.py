@@ -22,7 +22,7 @@ from app.models.comment import Comment, CommentLike
 from app.models.favorite import Favorite
 from app.models.cart import Cart
 from app.models.order import Order, OrderItem, OrderStatus
-from app.models.coupon import Coupon, UserCoupon
+from app.models.coupon import Coupon, UserCoupon, CouponIssuance, CouponUsageHistory, CouponType
 from app.core.security import hash_password
 
 
@@ -41,7 +41,9 @@ def clear_all_data(db: Session):
     db.query(Cart).delete()
     db.query(OrderItem).delete()
     db.query(Order).delete()
+    db.query(CouponUsageHistory).delete()
     db.query(UserCoupon).delete()
+    db.query(CouponIssuance).delete()
     db.query(Coupon).delete()
     db.query(Book).delete()
     db.query(RefreshToken).delete()
@@ -189,30 +191,32 @@ def create_books(db: Session, sellers: list[User]):
 
 
 def create_coupons(db: Session):
-    """쿠폰 데이터 생성 (10개)"""
+    """쿠폰 데이터 생성 (10개 - UNIVERSAL 4개, PERSONAL 6개)"""
     print("\n🎫 Creating coupons...")
 
     coupons = []
     now = datetime.utcnow()
 
+    # (이름, 할인율, 시작일, 종료일, 타입)
     coupon_data = [
-        ("신규회원10", 10.0, now, now + timedelta(days=365)),
-        ("봄맞이15", 15.0, now - timedelta(days=30), now + timedelta(days=60)),
-        ("여름특가20", 20.0, now, now + timedelta(days=90)),
-        ("가을독서", 12.0, now - timedelta(days=10), now + timedelta(days=80)),
-        ("겨울할인", 18.0, now, now + timedelta(days=120)),
-        ("주말특가", 10.0, now - timedelta(days=5), now + timedelta(days=30)),
-        ("VIP25", 25.0, now, now + timedelta(days=180)),
-        ("월말정산", 15.0, now - timedelta(days=15), now + timedelta(days=45)),
-        ("책사랑", 13.0, now, now + timedelta(days=150)),
-        ("첫구매", 20.0, now, now + timedelta(days=365)),
+        ("신규회원10", 10.0, now, now + timedelta(days=365), CouponType.UNIVERSAL),
+        ("봄맞이15", 15.0, now - timedelta(days=30), now + timedelta(days=60), CouponType.UNIVERSAL),
+        ("여름특가20", 20.0, now, now + timedelta(days=90), CouponType.UNIVERSAL),
+        ("가을독서", 12.0, now - timedelta(days=10), now + timedelta(days=80), CouponType.PERSONAL),
+        ("겨울할인", 18.0, now, now + timedelta(days=120), CouponType.UNIVERSAL),
+        ("주말특가", 10.0, now - timedelta(days=5), now + timedelta(days=30), CouponType.PERSONAL),
+        ("VIP25", 25.0, now, now + timedelta(days=180), CouponType.PERSONAL),
+        ("월말정산", 15.0, now - timedelta(days=15), now + timedelta(days=45), CouponType.PERSONAL),
+        ("책사랑", 13.0, now, now + timedelta(days=150), CouponType.PERSONAL),
+        ("첫구매", 20.0, now, now + timedelta(days=365), CouponType.PERSONAL),
     ]
 
-    for name, rate, start, end in coupon_data:
+    for name, rate, start, end, coupon_type in coupon_data:
         coupon = Coupon(
             name=name,
             description=f"{name} 쿠폰 - {int(rate)}% 할인",
             discount_rate=Decimal(str(rate)),
+            coupon_type=coupon_type,
             start_at=start,
             end_at=end,
             is_active=True
@@ -222,32 +226,39 @@ def create_coupons(db: Session):
     db.add_all(coupons)
     db.commit()
 
-    print(f"✅ Created {len(coupons)} coupons")
+    print(f"✅ Created {len(coupons)} coupons (UNIVERSAL: 4, PERSONAL: 6)")
     return coupons
 
 
 def create_user_coupons(db: Session, customers: list[User], coupons: list[Coupon]):
-    """사용자 쿠폰 데이터 생성 (30개)"""
-    print("\n🎁 Creating user coupons...")
+    """사용자 쿠폰 발급 데이터 생성 (PERSONAL 쿠폰만, 30개)"""
+    print("\n🎁 Creating user coupon issuances...")
 
-    user_coupons = []
+    issuances = []
+    personal_coupons = [c for c in coupons if c.coupon_type == CouponType.PERSONAL]
 
-    # 각 고객에게 랜덤으로 쿠폰 발급
+    # 각 고객에게 랜덤으로 PERSONAL 쿠폰 발급
     for customer in random.sample(customers, min(30, len(customers))):
-        coupon = random.choice(coupons)
-        user_coupon = UserCoupon(
-            user_id=customer.id,
-            coupon_id=coupon.id,
-            is_used=random.choice([True, False]),
-            used_at=datetime.utcnow() - timedelta(days=random.randint(1, 30)) if random.random() > 0.7 else None
-        )
-        user_coupons.append(user_coupon)
+        coupon = random.choice(personal_coupons)
 
-    db.add_all(user_coupons)
+        # 중복 발급 방지
+        existing = db.query(CouponIssuance).filter(
+            CouponIssuance.user_id == customer.id,
+            CouponIssuance.coupon_id == coupon.id
+        ).first()
+
+        if not existing:
+            issuance = CouponIssuance(
+                user_id=customer.id,
+                coupon_id=coupon.id
+            )
+            issuances.append(issuance)
+
+    db.add_all(issuances)
     db.commit()
 
-    print(f"✅ Created {len(user_coupons)} user coupons")
-    return user_coupons
+    print(f"✅ Created {len(issuances)} coupon issuances (PERSONAL only)")
+    return issuances
 
 
 def create_orders(db: Session, customers: list[User], books: list[Book]):
@@ -301,6 +312,50 @@ def create_orders(db: Session, customers: list[User], books: list[Book]):
 
     print(f"✅ Created {len(orders)} orders with {len(order_items)} items")
     return orders
+
+
+def create_admin_order(db: Session, admin: User, books: list[Book]):
+    """Admin 테스트용 DELIVERED 주문 생성"""
+    print("\n📦 Creating admin test order (DELIVERED)...")
+
+    # 1번, 2번 책을 각 1권씩 추가
+    book_quantities = [
+        (books[0], 1),  # 1번 책 1권
+        (books[1], 1),  # 2번 책 1권
+    ]
+
+    # Total 계산
+    total = sum(int(book.price * qty) for book, qty in book_quantities)
+
+    # DELIVERED 주문 생성
+    order = Order(
+        user_id=admin.id,
+        status=OrderStatus.DELIVERED,
+        total_price=Decimal(str(total)),
+        discount_amount=Decimal('0'),
+        final_price=Decimal(str(total)),
+        shipping_address="서울시 강남구 테헤란로 123 (Admin 테스트 주소)",
+        created_at=datetime.utcnow() - timedelta(days=7)  # 7일 전 주문
+    )
+    db.add(order)
+    db.flush()  # order.id 얻기
+
+    # 주문 아이템 추가
+    order_items = []
+    for book, quantity in book_quantities:
+        order_item = OrderItem(
+            order_id=order.id,
+            book_id=book.id,
+            quantity=quantity,
+            price_at_purchase=book.price
+        )
+        order_items.append(order_item)
+
+    db.add_all(order_items)
+    db.commit()
+
+    print(f"✅ Created admin test order (ID: {order.id}, Status: DELIVERED, Items: {len(order_items)})")
+    return order
 
 
 def create_reviews(db: Session, customers: list[User], books: list[Book], orders: list[Order]):
@@ -516,6 +571,7 @@ def main():
 
         # 데이터 생성
         users = create_users(db)
+        admin = [u for u in users if u.role == UserRole.ADMIN][0]
         sellers = [u for u in users if u.role == UserRole.SELLER]
         customers = [u for u in users if u.role == UserRole.CUSTOMER]
 
@@ -523,6 +579,11 @@ def main():
         coupons = create_coupons(db)
         user_coupons = create_user_coupons(db, customers, coupons)
         orders = create_orders(db, customers, books)
+
+        # Admin 테스트용 DELIVERED 주문 추가
+        admin_order = create_admin_order(db, admin, books)
+        if admin_order:
+            orders.append(admin_order)
         reviews = create_reviews(db, customers, books, orders)
         review_likes = create_review_likes(db, customers, reviews)
         comments = create_comments(db, customers, reviews)

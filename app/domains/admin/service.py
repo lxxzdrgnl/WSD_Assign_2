@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from app.models.user import User, UserRole
 from app.models.book import Book
 from app.models.order import Order, OrderStatus
-from app.models.coupon import Coupon, UserCoupon
+from app.models.coupon import Coupon, UserCoupon, CouponIssuance, CouponUsageHistory, CouponType
 from app.domains.admin.schemas import (
     RoleUpdateRequest,
     OrderStatusUpdateRequest,
@@ -198,11 +198,15 @@ class AdminService:
         if existing:
             raise ConflictException("COUPON_NAME_ALREADY_EXISTS", "Coupon with this name already exists")
 
+        # 쿠폰 타입 결정
+        coupon_type = CouponType.UNIVERSAL if data.issue_to_all else CouponType.PERSONAL
+
         # 쿠폰 생성
         coupon = Coupon(
             name=data.name,
             description=data.description,
             discount_rate=data.discount_rate,
+            coupon_type=coupon_type,
             start_at=data.start_at,
             end_at=data.end_at,
             is_active=data.is_active
@@ -212,6 +216,10 @@ class AdminService:
             db.add(coupon)
             db.commit()
             db.refresh(coupon)
+
+            # UNIVERSAL 쿠폰은 별도 발급 불필요 (모두 사용 가능)
+            # PERSONAL 쿠폰은 개별 발급 필요
+
         except IntegrityError as e:
             db.rollback()
             raise BadRequestException("COUPON_CREATE_FAILED", f"Failed to create coupon: {str(e)}")
@@ -219,9 +227,9 @@ class AdminService:
         return coupon
 
     @staticmethod
-    def issue_coupon_to_user(db: Session, coupon_id: int, user_id: int) -> UserCoupon:
+    def issue_coupon_to_user(db: Session, coupon_id: int, user_id: int) -> CouponIssuance:
         """
-        사용자에게 쿠폰 발급
+        사용자에게 쿠폰 발급 (PERSONAL 쿠폰만)
 
         Args:
             db: 데이터베이스 세션
@@ -229,10 +237,11 @@ class AdminService:
             user_id: 사용자 ID
 
         Returns:
-            UserCoupon: 발급된 쿠폰
+            CouponIssuance: 발급된 쿠폰
 
         Raises:
             NotFoundException: 쿠폰 또는 사용자를 찾을 수 없음
+            BadRequestException: UNIVERSAL 쿠폰은 발급 불가
             ConflictException: 이미 발급됨
         """
         # 쿠폰 존재 확인
@@ -240,31 +249,38 @@ class AdminService:
         if not coupon:
             raise NotFoundException("COUPON_NOT_FOUND", "Coupon not found")
 
+        # UNIVERSAL 쿠폰은 개별 발급 불가
+        if coupon.coupon_type == CouponType.UNIVERSAL:
+            raise BadRequestException(
+                "UNIVERSAL_COUPON_CANNOT_BE_ISSUED",
+                "UNIVERSAL coupons are available to all users and cannot be issued individually"
+            )
+
         # 사용자 존재 확인
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
             raise NotFoundException("USER_NOT_FOUND", "User not found")
 
         # 이미 발급되었는지 확인
-        existing = db.query(UserCoupon).filter(
-            UserCoupon.user_id == user_id,
-            UserCoupon.coupon_id == coupon_id
+        existing = db.query(CouponIssuance).filter(
+            CouponIssuance.user_id == user_id,
+            CouponIssuance.coupon_id == coupon_id
         ).first()
         if existing:
             raise ConflictException("COUPON_ALREADY_ISSUED", "Coupon already issued to this user")
 
         # 쿠폰 발급
-        user_coupon = UserCoupon(
+        issuance = CouponIssuance(
             user_id=user_id,
             coupon_id=coupon_id
         )
 
         try:
-            db.add(user_coupon)
+            db.add(issuance)
             db.commit()
-            db.refresh(user_coupon)
+            db.refresh(issuance)
         except IntegrityError as e:
             db.rollback()
             raise BadRequestException("COUPON_ISSUE_FAILED", f"Failed to issue coupon: {str(e)}")
 
-        return user_coupon
+        return issuance
