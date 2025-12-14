@@ -196,7 +196,8 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['book_id'], ['books.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['order_id'], ['orders.id'], ondelete='RESTRICT'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('user_id', 'book_id', name='unique_user_book_review')
     )
     op.create_index(op.f('ix_reviews_book_id'), 'reviews', ['book_id'], unique=False)
     op.create_index(op.f('ix_reviews_order_id'), 'reviews', ['order_id'], unique=False)

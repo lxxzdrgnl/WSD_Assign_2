@@ -69,6 +69,17 @@ class ReviewService:
                 "You can only review books you have purchased and received"
             )
 
+        # 중복 리뷰 체크 (친절한 에러 메시지 제공)
+        existing_review = db.query(Review).filter(
+            Review.user_id == user_id,
+            Review.book_id == data.book_id
+        ).first()
+        if existing_review:
+            raise BadRequestException(
+                "DUPLICATE_REVIEW",
+                f"You have already reviewed this book (Review ID: {existing_review.id}). Please update your existing review instead."
+            )
+
         # 리뷰 생성
         review = Review(
             book_id=data.book_id,

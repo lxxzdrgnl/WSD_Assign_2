@@ -13,6 +13,7 @@ class Review(Base):
     __tablename__ = "reviews"
     __table_args__ = (
         CheckConstraint("rating >= 1 AND rating <= 5", name="check_rating_range"),
+        UniqueConstraint('user_id', 'book_id', name='unique_user_book_review'),
     )
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="리뷰 ID")
