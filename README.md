@@ -24,9 +24,42 @@
 
 ---
 
+## 배포 주소
+
+### 프로덕션 환경
+- **Base URL**: http://113.198.66.68:10040
+- **API Root**: http://113.198.66.68:10040/api
+- **Swagger Docs**: http://113.198.66.68:10040/docs#/
+- **ReDoc**: http://113.198.66.68:10040/redoc
+- **Health Check**: http://113.198.66.68:10040/health
+
+### SSH 접속
+```bash
+ssh -i jcloud.pem -p 19040 ubuntu@113.198.66.68
+```
+
+---
+
 ## 실행 방법
 
-### 로컬 실행
+### Docker Compose로 전체 실행
+#### 1. 환경 변수 설정
+`.env.example` 파일을 복사하여 `.env` 파일을 생성하고 필요한 값을 설정합니다.
+```bash
+cp .env.example .env
+```
+#### 2. 도커 컨테이너 실행
+```bash
+docker-compose up -d
+```
+Docker Compose를 사용하여 전체 환경을 구축하고 실행합니다. 이 명령어를 실행하면 다음을 포함한 대부분의 설정이 자동으로 처리됩니다:
+
+*   **의존성 설치**: `Dockerfile`에 의해 `requirements.txt`에 명시된 파이썬 패키지들이 자동으로 설치됩니다.
+*   **환경 변수 로드**: `docker-compose.yml`에 `.env` 파일이 설정되어 있다면, 해당 파일의 환경 변수가 컨테이너에 로드됩니다. 단, `.env.example` 파일을 복사하여 `.env` 파일을 생성하고 내용을 자신의 환경에 맞게 수정하는 작업은 최초 한 번 **직접 해주셔야 합니다.**
+*   **데이터베이스 마이그레이션 및 시드**: 컨테이너 시작 시 `docker-entrypoint.sh` 스크립트가 `alembic upgrade head`로 마이그레이션을 실행하고, 필요한 경우 `scripts/seed_data.py`를 통해 초기 데이터를 자동으로 로드합니다.
+*   **서버 실행**: `docker-entrypoint.sh` 스크립트가 `uvicorn` 서버를 자동으로 시작합니다.
+
+### 로컬 실횅
 
 #### 1. 의존성 설치
 ```bash
@@ -52,7 +85,7 @@ docker-compose up -d db
 # Alembic 마이그레이션 실행
 alembic upgrade head
 
-# 시드 데이터 생성 (선택사항)
+# 시드 데이터 생성
 python scripts/seed_data.py
 ```
 
@@ -61,8 +94,6 @@ python scripts/seed_data.py
 # 개발 서버 실행 (Hot Reload)
 uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 
-# 또는 Docker Compose로 전체 실행
-docker-compose up -d
 ```
 
 #### 5. 접속 확인
@@ -96,22 +127,6 @@ docker-compose up -d
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Access Token 만료 시간 (분) | 60 | - |
 | `REFRESH_TOKEN_EXPIRE_DAYS` | Refresh Token 만료 시간 (일) | 7 | - |
 | `BCRYPT_ROUNDS` | Bcrypt 해싱 라운드 | 12 | - |
-
----
-
-## 배포 주소
-
-### 프로덕션 환경
-- **Base URL**: http://113.198.66.68:10040
-- **API Root**: http://113.198.66.68:10040/api
-- **Swagger URL**: http://113.198.66.68:10040/docs
-- **ReDoc URL**: http://113.198.66.68:10040/redoc
-- **Health Check URL**: http://113.198.66.68:10040/health
-
-### SSH 접속
-```bash
-ssh -i jcloud.pem -p 19040 ubuntu@113.198.66.68
-```
 
 ---
 
@@ -457,15 +472,11 @@ docker exec -it wsd_assignment_2-db-1 mysql -u root -p
    - 배송지 관리, 배송 추적 기능 없음
    - **개선 계획**: 배송 API 연동 및 배송 상태 추적
 
-8. **쿠폰 자동 발급 미지원**
-   - 관리자가 수동으로 발급만 가능
-   - **개선 계획**: 조건부 자동 발급 (신규 회원, 생일 등)
-
-9. **로그 관리 개선 필요**
+8. **로그 관리 개선 필요**
    - 파일 기반 로깅만 사용
    - **개선 계획**: ELK Stack 또는 CloudWatch Logs 연동
 
-10. **테스트 커버리지 부족**
+9. **테스트 커버리지 부족**
     - 일부 도메인만 단위 테스트 존재
     - **개선 계획**: 통합 테스트 및 E2E 테스트 추가, 90% 이상 커버리지 목표
 
@@ -493,15 +504,3 @@ docker exec -it wsd_assignment_2-db-1 mysql -u root -p
 - **Rate Limiting**: SlowAPI
 - **Server**: Uvicorn 0.38.0
 - **Containerization**: Docker, Docker Compose
-
----
-
-## 라이선스
-
-이 프로젝트는 교육 목적으로 작성되었습니다.
-
----
-
-## 문의
-
-프로젝트 관련 문의사항은 이슈 트래커를 이용해주세요.
